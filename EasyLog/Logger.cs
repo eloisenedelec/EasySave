@@ -11,6 +11,7 @@ namespace EasyLog
         private static Logger _instance;
         private static object _lock = new object();
         private string _logDirectoryPath;
+        private string _currentJobName;
 
         private Logger() {
 
@@ -57,7 +58,7 @@ namespace EasyLog
 
         public void OnBackupStarted(string jobName, int totalFiles, long totalSize) {
             _currentJobName = jobName;
-            Console.WriteLine($"[Logger] Sauvegarde '{jobName}' démarrée ({totalFiles} fichiers, {totalSize} octets)");
+            Console.WriteLine($"[Logger] Sauvegarde '{jobName}' dï¿½marrï¿½e ({totalFiles} fichiers, {totalSize} octets)");
         }
 
         public void OnBackupCompleted(string jobName) { 
@@ -111,13 +112,12 @@ namespace EasyLog
 
                 File.WriteAllText(logFilePath, json);
 
-                Console.WriteLine($"[Logger] Entrée ajoutée : {entry.SourceFile} ({entry.FileSize} octets, {entry.TransferTimeMs} ms)");
+                Console.WriteLine($"[Logger] Entrï¿½e ajoutï¿½e : {entry.SourceFile} ({entry.FileSize} octets, {entry.TransferTimeMs} ms)");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Logger] Erreur d'écriture : {ex.Message}");
+                Console.WriteLine($"[Logger] Erreur d'ï¿½criture : {ex.Message}");
             }
         }
-    }
     }
 }
