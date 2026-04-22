@@ -143,38 +143,67 @@ Le logiciel génère automatiquement des fichiers dans : C:\Users\[User]\AppData
 
 backups.json (Configuration des travaux)
 [
+
   {
+  
     "id": 1,
+  
     "name": "Documents Backup",
+    
     "sourcePath": "C:\\Users\\User\\Documents",
+    
     "targetPath": "D:\\Backups\\Documents",
+    
     "type": "Differential"
+  
   }
+
 ]
 
 state.json (État temps réel)
+
 {
+
   "Documents Backup": {
+  
     "JobName": "Documents Backup",
+    
     "Timestamp": "2024-04-21T14:32:15",
+    
     "Status": "Active",
+    
     "TotalFiles": 150,
+    
     "FilesProcessed": 87,
+    
     "FilesRemaining": 63,
+    
     "CurrentSourceFile": "C:\\Users\\User\\Documents\\rapport.pdf"
+  
   }
+
 }
 
 logs/YYYY-MM-DD.json (Log journalier)
+
 [
+
   {
+  
     "Timestamp": "2024-04-21T14:30:00",
+    
     "JobName": "Documents Backup",
+    
     "SourceFile": "C:\\Users\\User\\Documents\\notes.txt",
+    
     "TargetFile": "D:\\Backups\\Documents\\notes.txt",
+    
     "FileSize": 2048,
+    
     "TransferTimeMs": 15
+  
   }
+
 ]
 
 ##  Multilangue
