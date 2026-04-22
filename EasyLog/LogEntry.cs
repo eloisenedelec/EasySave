@@ -12,9 +12,22 @@ namespace EasyLog
         public long FileSize { get; set; }
         public long TransferTimeMs { get; set; }
 
+        public LogEntry()
+        {
+            Timestamp = DateTime.Now;
+            JobName = string.Empty;
+            SourceFile = string.Empty;
+            TargetFile = string.Empty;
+        }
+
         public string ToJson() 
         {
-            return JsonSerializer.Serialize(this);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true // opt retours à la ligne 
+            };
+
+            return JsonSerializer.Serialize(this, options);
         }
     }
 }
