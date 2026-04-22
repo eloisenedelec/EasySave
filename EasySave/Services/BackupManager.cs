@@ -1,3 +1,4 @@
+using System.IO;
 using EasySave.Models;
 using EasySave.Repositories;
 
@@ -11,8 +12,13 @@ namespace EasySave.Services
         private IBackupRepository _repository;
         private int _maxJobs = 5;
          
-        private BackupManager() { 
-            _repository = new JsonBackupRepository(); 
+        private BackupManager() {
+            string filePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "EasySave",
+                "jobs.json"
+            );
+            _repository = new JsonBackupRepository(filePath);
             _jobs = _repository.Load() ?? new List<BackupJob>();
 
         }
