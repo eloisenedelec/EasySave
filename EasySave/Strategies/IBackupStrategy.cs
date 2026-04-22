@@ -1,9 +1,10 @@
 using EasySave.Observers;
+using EasySave.Models;
 
 namespace EasySave.Strategies
 {
     public interface IBackupStrategy
     {
-        void Execute(string sourcePath, string targetPath, IBackupObserver observer);
+        void Execute(BackupJob job, IBackupObserver observer);
     }
 }
