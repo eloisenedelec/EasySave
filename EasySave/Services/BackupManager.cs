@@ -10,14 +10,46 @@ namespace EasySave.Services
         private List<BackupJob> _jobs;
         private IBackupRepository _repository;
         private int _maxJobs = 5;
+         
+        private BackupManager() { 
+            _repository = new JsonBackupRepository(); 
+            _jobs = _repository.Load() ?? new List<BackupJob>();
 
-        private BackupManager() { // TODO }
+        }
 
-        public static BackupManager GetInstance() { throw new NotImplementedException(); } // TODO
-        public bool AddBackupJob(BackupJob job) { throw new NotImplementedException(); } // TODO
-        public bool RemoveBackupJob(int id) { throw new NotImplementedException(); } // TODO
-        public BackupJob GetBackupJob(int id) { throw new NotImplementedException(); } // TODO
-        public List<BackupJob> GetAllBackupJobs() { throw new NotImplementedException(); } // TODO
-        public int GetJobCount() { throw new NotImplementedException(); } // TODO
+        public static BackupManager GetInstance() {
+            if (_instance == null)
+            {
+                lock (_lock)
+                {
+                    if (_instance == null)
+                    {
+                        _instance = new BackupManager();
+                    }
+                }
+            }
+            return _instance;
+        }
+        public bool AddBackupJob(BackupJob job) {
+            if (_jobs.Count >= _maxJobs) return false;
+
+            _jobs.Add(job);
+            _repository.Save(_jobs);
+            return true;
+
+        }
+        public bool RemoveBackupJob(int id) {
+            var job = _jobs.FirstOrDefault(j => j.Id == id);
+            if (job != null)
+            {
+                _jobs.Remove(job);
+                _repository.Save(_jobs);
+                return true;
+            }
+            return false;
+        }
+        public BackupJob GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
+        public List<BackupJob> GetAllBackupJobs() { return _jobs; } // TODO
+        public int GetJobCount() { return _jobs.Count; } // TODO
     }
 }
