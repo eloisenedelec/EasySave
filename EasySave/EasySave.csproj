@@ -5,6 +5,12 @@
     <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Resources\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
