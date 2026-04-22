@@ -49,7 +49,7 @@ namespace EasySave.Strategies
                 var startTime = DateTime.Now;
                 File.Copy(file, targetFile, true);
                 var endTime = DateTime.Now;
-                observer.OnFileProcessed(relativePath, fileInfo.Length, (endTime - startTime).Ticks);
+                observer.OnFileProcessed(file, targetFile, fileInfo.Length, (endTime - startTime).Ticks);
             }
         }
     }

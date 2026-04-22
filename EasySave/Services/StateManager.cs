@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using EasySave.Models;
-using EasyLog.Contracts;
+using EasySave.Observers;
 
 namespace EasySave.Services
 {
@@ -26,7 +26,7 @@ namespace EasySave.Services
             _stateFilePath = Path.Combine(easySavePath, "state.json");
             _states = new Dictionary<string, BackupState>();
 
-            Console.WriteLine($"[StateManager] Fichier d'état : {_stateFilePath}");
+            Console.WriteLine($"[StateManager] Fichier d'ï¿½tat : {_stateFilePath}");
         }
 
         public static StateManager GetInstance()
@@ -80,7 +80,7 @@ namespace EasySave.Services
             _states[jobName] = state;
             SaveToFile();
 
-            Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' démarrée");
+            Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' dï¿½marrï¿½e");
         }
 
         public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime)
@@ -98,7 +98,7 @@ namespace EasySave.Services
 
                 SaveToFile();
 
-                Console.WriteLine($"[StateManager] Fichier traité : {Path.GetFileName(sourceFile)} ({state.FilesProcessed}/{state.TotalFiles})");
+                Console.WriteLine($"[StateManager] Fichier traitï¿½ : {Path.GetFileName(sourceFile)} ({state.FilesProcessed}/{state.TotalFiles})");
             }
         }
 
@@ -114,7 +114,7 @@ namespace EasySave.Services
 
                 SaveToFile();
 
-                Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' terminée");
+                Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' terminï¿½e");
             }
 
             _currentJobName = null;

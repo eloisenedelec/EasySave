@@ -17,7 +17,7 @@ namespace EasySave.Strategies
             var sourceInfo = new FileInfo(sourceFile);
             var targetInfo = new FileInfo(targetFile);
 
-            // Modifié si la date d'écriture est plus récente
+            // Modifiï¿½ si la date d'ï¿½criture est plus rï¿½cente
             return sourceInfo.LastWriteTime > targetInfo.LastWriteTime;
         }
 
@@ -62,7 +62,7 @@ namespace EasySave.Strategies
                     var endTime = DateTime.Now;
                     var fileSize = new FileInfo(sourceFile).Length;
                     var transferTime = (endTime - startTime).Ticks;
-                    observer.OnFileProcessed(relative, fileSize, transferTime);
+                    observer.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime);
                 }
             }
         }

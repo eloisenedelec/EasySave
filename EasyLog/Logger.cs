@@ -41,13 +41,13 @@ namespace EasyLog
             return _instance;
         } 
 
-        public void OnFileProcessed(string fileName, long fileSize, long transferTime) {
+        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime) {
             var entry = new LogEntry
             {
                 Timestamp = DateTime.Now,
                 JobName = _currentJobName,
-                SourceFile = fileName,
-                TargetFile = string.Empty, // TODO: sera rempli par BackupExecutor plus tard
+                SourceFile = sourceFile,
+                TargetFile = targetFile,
                 FileSize = fileSize,
                 TransferTimeMs = transferTime
             };
