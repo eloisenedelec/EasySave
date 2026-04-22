@@ -1,3 +1,6 @@
+using System;
+using System.Text.Json;
+
 namespace EasyLog
 {
     public class LogEntry
@@ -9,6 +12,9 @@ namespace EasyLog
         public long FileSize { get; set; }
         public long TransferTimeMs { get; set; }
 
-        public string ToJson() { throw new NotImplementedException(); } // TODO
+        public string ToJson() 
+        {
+            return JsonSerializer.Serialize(this);
+        }
     }
 }

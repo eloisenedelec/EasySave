@@ -1,19 +1,31 @@
+using System;
+using System.Text.Json.Serialization;
+
 namespace EasySave.Models
 {
     public class BackupJob
     {
-        private int _id;
-        private string _name;
-        private string _sourcePath;
-        private string _targetPath;
-        private BackupType _type;
+        [JsonInclude] private int _id;
+        [JsonInclude] private string _name;
+        [JsonInclude] private string _sourcePath;
+        [JsonInclude] private string _targetPath;
+        [JsonInclude] private BackupType _type;
 
-        public BackupJob(int id, string name, string source, string target, BackupType type) { // TODO }
+        [JsonConstructor] public BackupJob() { }
 
-        public int GetId() { throw new NotImplementedException(); } // TODO
-        public string GetName() { throw new NotImplementedException(); } // TODO
-        public string GetSourcePath() { throw new NotImplementedException(); } // TODO
-        public string GetTargetPath() { throw new NotImplementedException(); } // TODO
-        public BackupType GetType() { throw new NotImplementedException(); } // TODO
+        public BackupJob(int id, string name, string source, string target, BackupType type)
+        {
+            _id = id;
+            _name = name;
+            _sourcePath = source;
+            _targetPath = target;
+            _type = type;
+        }
+
+        public int GetId() { return _id; }
+        public string GetName() { return _name; }
+        public string GetSourcePath() { return _sourcePath; }
+        public string GetTargetPath() { return _targetPath; }
+        public BackupType GetType() { return _type; }
     }
 }
