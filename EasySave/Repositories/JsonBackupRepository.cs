@@ -11,7 +11,7 @@ namespace EasySave.Repositories
         {
             _filePath = filePath;
 
-            string directory = Path.GetDirectoryName(_filePath);
+            string? directory = Path.GetDirectoryName(_filePath);
             if (!Directory.Exists(directory) && !string.IsNullOrEmpty(directory)) 
             {
                 Directory.CreateDirectory(directory);
@@ -39,13 +39,13 @@ namespace EasySave.Repositories
                 return new List<BackupJob>();
             }
 
-            return JsonSerializer.Deserialize<List<BackupJob>>(jsonString);
+            return JsonSerializer.Deserialize<List<BackupJob>>(jsonString) ?? new List<BackupJob>();
         }
         public bool Delete(int id) 
         {
             List<BackupJob> jobs = Load();
 
-            BackupJob jobToRemove = jobs.Find(j => j.GetId() == id);
+            BackupJob? jobToRemove = jobs.Find(j => j.Id == id);
 
             if (jobToRemove != null)
             {

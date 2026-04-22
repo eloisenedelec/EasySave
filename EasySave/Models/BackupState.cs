@@ -1,42 +1,26 @@
 using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EasySave.Models
 {
     public class BackupState
     {
-        [JsonInclude] private string _jobName;
-        [JsonInclude] private DateTime _timestamp;
-        [JsonInclude] private JobStatus _status;
-        [JsonInclude] private int _totalFiles;
-        [JsonInclude] private long _totalSize;
-        [JsonInclude] private int _filesProcessed;
-        [JsonInclude] private int _filesRemaining;
-        [JsonInclude] private long _sizeRemaining;
-        [JsonInclude] private string _currentSourceFile;
-        [JsonInclude] private string _currentTargetFile;
+        public string JobName { get; private set; }
+        public DateTime Timestamp { get; set; }
+        public JobStatus Status { get; set; }
+        public int TotalFiles { get; set; }
+        public long TotalSize { get; set; }
+        public int FilesProcessed { get; set; }
+        public int FilesRemaining { get; set; }
+        public long SizeRemaining { get; set; }
+        public string CurrentSourceFile { get; set; } = string.Empty;
+        public string CurrentTargetFile { get; set; } = string.Empty;
 
-        public BackupState(string jobName) 
+        public BackupState(string jobName)
         {
-            _jobName = jobName;
-            _status = JobStatus.Inactive;
-            _timestamp = DateTime.Now;
-        }
-
-        public void UpdateProgress(int filesProcessed, long sizeRemaining, string currentFile) 
-        {
-            _filesProcessed = filesProcessed;
-            _sizeRemaining = sizeRemaining;
-            _currentSourceFile = currentFile;
-
-            _filesRemaining = _totalFiles - _filesProcessed;
-            _timestamp = DateTime.Now;
-        }
-        public void SetStatus(JobStatus status)
-        {
-            _status = status;
-            _timestamp = DateTime.Now;
+            JobName = jobName;
+            Status = JobStatus.Inactive;
+            Timestamp = DateTime.Now;
         }
         public string ToJson() 
         {

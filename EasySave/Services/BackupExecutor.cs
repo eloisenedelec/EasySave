@@ -5,7 +5,7 @@ using EasySave.Strategies;
 
 namespace EasySave.Services
 {
-    public class BackupExecutor
+    public class BackupExecutor : IBackupObserver
     {
         private List<IBackupObserver> _observers;
 
@@ -26,12 +26,7 @@ namespace EasySave.Services
             try
             {
                 IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(job.Type);
-
-                NotifyBackupStarted(job.Name, 0, 0);
-
-                strategy.Execute(job.SourcePath, job.TargetPath, this);
-
-                NotifyBackupCompleted(job.Name);
+                strategy.Execute(job, this);
             }
             catch (Exception ex)
             {
@@ -50,8 +45,21 @@ namespace EasySave.Services
             }
         }
 
-        private void NotifyFileProcessed(string fileName, long size, long time) {
-            _observers.ForEach(o => o.OnFileProcessed(fileName, size, time));
+        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime) {
+            NotifyFileProcessed(sourceFile, targetFile, fileSize, transferTime);
+        }
+        public void OnBackupStarted(string jobName, int totalFiles, long totalSize) {
+            NotifyBackupStarted(jobName, totalFiles, totalSize);
+        }
+        public void OnBackupCompleted(string jobName) {
+            NotifyBackupCompleted(jobName);
+        }
+        public void OnBackupError(string jobName, string error) {
+            NotifyBackupError(jobName, error);
+        }
+
+        private void NotifyFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime) {
+            _observers.ForEach(o => o.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime));
         }
         private void NotifyBackupStarted(string jobName, int totalFiles, long totalSize) {
             _observers.ForEach(o => o.OnBackupStarted(jobName, totalFiles, totalSize));

@@ -1,3 +1,4 @@
+using System.IO;
 using EasySave.Models;
 using EasySave.Repositories;
 
@@ -5,14 +6,19 @@ namespace EasySave.Services
 {
     public class BackupManager
     {
-        private static BackupManager _instance;
+        private static BackupManager? _instance;
         private static object _lock = new object();
         private List<BackupJob> _jobs;
         private IBackupRepository _repository;
         private int _maxJobs = 5;
          
-        private BackupManager() { 
-            _repository = new JsonBackupRepository(); 
+        private BackupManager() {
+            string filePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "EasySave",
+                "jobs.json"
+            );
+            _repository = new JsonBackupRepository(filePath);
             _jobs = _repository.Load() ?? new List<BackupJob>();
 
         }
@@ -48,7 +54,7 @@ namespace EasySave.Services
             }
             return false;
         }
-        public BackupJob GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
+        public BackupJob? GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
         public List<BackupJob> GetAllBackupJobs() { return _jobs; } // TODO
         public int GetJobCount() { return _jobs.Count; } // TODO
     }
