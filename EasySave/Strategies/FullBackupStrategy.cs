@@ -5,51 +5,35 @@ namespace EasySave.Strategies
 {
     public class FullBackupStrategy : IBackupStrategy
     {
-        private long GetTotalSize(string sourcePath)
-        {
-            return Directory
-                .GetFiles(sourcePath, "*", SearchOption.AllDirectories)
-                .Sum(file => new FileInfo(file).Length);
-        }
-
-        private int GetTotalFiles(string sourcePath)
-        {
-            return Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Length;
-        }
-
-
         public void Execute(BackupJob job, IBackupObserver observer) {
-            string sourcePath = job.GetSourcePath();
-            string targetPath = job.GetTargetPath();
-            long totalSize = GetTotalSize(sourcePath);
-            int totalFiles = GetTotalFiles(sourcePath);
-            observer.OnBackupStarted(job.GetName(), totalFiles, totalSize);
+            string sourcePath = job.SourcePath;
+            string targetPath = job.TargetPath;
+
+            var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
+            long totalSize = files.Sum(f => new FileInfo(f).Length);
+
+            observer.OnBackupStarted(job.Name, files.Length, totalSize);
             try
             {
-                CopyAllFiles(sourcePath, targetPath, observer);
-                observer.OnBackupCompleted(job.GetName());
+                foreach (var file in files)
+                {
+                    var relativePath = Path.GetRelativePath(sourcePath, file);
+                    var targetFile = Path.Combine(targetPath, relativePath);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
+
+                    var fileSize = new FileInfo(file).Length;
+                    var startTime = DateTime.Now;
+                    File.Copy(file, targetFile, true);
+                    var transferTime = (DateTime.Now - startTime).Ticks;
+
+                    observer.OnFileProcessed(file, targetFile, fileSize, transferTime);
+                }
+                observer.OnBackupCompleted(job.Name);
             }
             catch (Exception ex)
             {
-                observer.OnBackupError(job.GetName(), ex.Message);
-            }
-        }
-
-        private void CopyAllFiles(string source, string target, IBackupObserver observer) { 
-            foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-            {
-                var relativePath = Path.GetRelativePath(source, file);
-                var targetFile = Path.Combine(target, relativePath);
-                var targetDir = Path.GetDirectoryName(targetFile);
-                if (!Directory.Exists(targetDir))
-                {
-                    Directory.CreateDirectory(targetDir);
-                }
-                var fileInfo = new FileInfo(file);
-                var startTime = DateTime.Now;
-                File.Copy(file, targetFile, true);
-                var endTime = DateTime.Now;
-                observer.OnFileProcessed(file, targetFile, fileInfo.Length, (endTime - startTime).Ticks);
+                observer.OnBackupError(job.Name, ex.Message);
             }
         }
     }

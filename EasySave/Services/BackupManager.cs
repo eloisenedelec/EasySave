@@ -6,7 +6,7 @@ namespace EasySave.Services
 {
     public class BackupManager
     {
-        private static BackupManager _instance;
+        private static BackupManager? _instance;
         private static object _lock = new object();
         private List<BackupJob> _jobs;
         private IBackupRepository _repository;
@@ -54,7 +54,7 @@ namespace EasySave.Services
             }
             return false;
         }
-        public BackupJob GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
+        public BackupJob? GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
         public List<BackupJob> GetAllBackupJobs() { return _jobs; } // TODO
         public int GetJobCount() { return _jobs.Count; } // TODO
     }

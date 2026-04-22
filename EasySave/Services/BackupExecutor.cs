@@ -25,12 +25,12 @@ namespace EasySave.Services
         public void ExecuteBackup(BackupJob job) {
             try
             {
-                IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(job.GetType());
+                IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(job.Type);
                 strategy.Execute(job, this);
             }
             catch (Exception ex)
             {
-                NotifyBackupError(job.GetName(), ex.Message);
+                NotifyBackupError(job.Name, ex.Message);
             }
         }
         public void ExecuteMultipleBackups(List<int> jobIds) {

@@ -9,12 +9,12 @@ namespace EasySave.Services
 {
     public class StateManager : IBackupObserver
     {
-        private static StateManager _instance;
+        private static StateManager? _instance;
         private static readonly object _lock = new object();
 
         private readonly string _stateFilePath;
         private Dictionary<string, BackupState> _states;
-        private string _currentJobName;
+        private string? _currentJobName;
 
         private StateManager()
         {
@@ -51,12 +51,10 @@ namespace EasySave.Services
             SaveToFile();
         }
 
-        public BackupState GetState(string jobName)
+        public BackupState? GetState(string jobName)
         {
             if (_states.ContainsKey(jobName))
-            {
                 return _states[jobName];
-            }
             return null;
         }
 
@@ -85,7 +83,7 @@ namespace EasySave.Services
 
         public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime)
         {
-            if (_states.ContainsKey(_currentJobName))
+            if (_currentJobName != null && _states.ContainsKey(_currentJobName))
             {
                 var state = _states[_currentJobName];
 

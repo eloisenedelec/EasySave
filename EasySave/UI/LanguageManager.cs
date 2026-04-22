@@ -1,9 +1,14 @@
+using System.IO;
+using System.Text.Json;
+
 namespace EasySave.UI
 {
     public class LanguageManager
     {
-        private static LanguageManager _instance;
-        private string _currentLanguage;
+        private static LanguageManager? _instance;
+        private static readonly object _lock = new object();
+        private string _currentLanguage = string.Empty;
+        private string _resourcesPath;
         private Dictionary<string, string> _translations;
 
         private LanguageManager() {
@@ -15,7 +20,7 @@ namespace EasySave.UI
 
             _translations = new Dictionary<string, string>();
 
-            LoadLanguage("fr"); // fr par défaut
+            LoadLanguage("fr"); // fr par dï¿½faut
         }
 
         public static LanguageManager GetInstance() {
@@ -35,7 +40,6 @@ namespace EasySave.UI
 
         public void LoadLanguage(string languageCode) {
 
-            string fileName = $"lang_{languageCode}.json";
             string filePath = Path.Combine(_resourcesPath, $"lang_{languageCode}.json");
 
             if (!File.Exists(filePath))
@@ -46,10 +50,10 @@ namespace EasySave.UI
             try
             {
                 string json = File.ReadAllText(filePath); // convert en str
-                _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json); // convert en objet dico clé valeur
+                _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
                 _currentLanguage = languageCode;
 
-                Console.WriteLine($"[OK] Langue chargée : {languageCode}");
+                Console.WriteLine($"[OK] Langue chargï¿½e : {languageCode}");
             }
             catch (Exception ex)
             {
@@ -64,7 +68,7 @@ namespace EasySave.UI
             {
                 return _translations[key];
             }
-            return $"[{key}]"; // retourne la clé si pas de valeur
+            return $"[{key}]"; // retourne la clï¿½ si pas de valeur
 
         } 
     }

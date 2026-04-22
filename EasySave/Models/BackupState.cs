@@ -13,8 +13,8 @@ namespace EasySave.Models
         public int FilesProcessed { get; set; }
         public int FilesRemaining { get; set; }
         public long SizeRemaining { get; set; }
-        public string CurrentSourceFile { get; set; }
-        public string CurrentTargetFile { get; set; }
+        public string CurrentSourceFile { get; set; } = string.Empty;
+        public string CurrentTargetFile { get; set; } = string.Empty;
 
         public BackupState(string jobName)
         {

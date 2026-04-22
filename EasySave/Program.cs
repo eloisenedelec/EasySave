@@ -6,10 +6,13 @@ namespace EasySave
 {
     class Program
     {
-        public static void Main(string[] args) { // TODO }
+        public static void Main(string[] args)
+        {
+            var executor = new BackupExecutor();
+            executor.AddObserver(Logger.GetInstance());
+            executor.AddObserver(StateManager.GetInstance());
 
-        private static void InitializeApplication() { // TODO }
-        private static List<int> ParseCommandLineArguments(string[] args) { throw new NotImplementedException(); } // TODO
-        private static void ExecuteBackupsFromCLI(List<int> jobIds) { // TODO }
+            new ConsoleUI(executor).Run();
+        }
     }
 }
