@@ -1,5 +1,6 @@
 using EasySave.Models;
 using EasySave.Services;
+using EasyLog;
 
 namespace EasySave.UI
 {
@@ -29,7 +30,8 @@ namespace EasySave.UI
                     case 3: DisplayAllBackupsMenu(); break;
                     case 4: DeleteBackupMenu(); break;
                     case 5: ChangeLanguageMenu(); break;
-                    case 6: running = false; break;
+                    case 6: ChangeLogFormatMenu(); break;
+                    case 7: running = false; break;
                     default:
                         Console.WriteLine(_lang.GetText("invalid_choice"));
                         break;
@@ -46,6 +48,7 @@ namespace EasySave.UI
             Console.WriteLine(_lang.GetText("menu_list"));
             Console.WriteLine(_lang.GetText("menu_delete"));
             Console.WriteLine(_lang.GetText("menu_language"));
+            Console.WriteLine(_lang.GetText("menu_logformat"));
             Console.WriteLine(_lang.GetText("menu_quit"));
             Console.Write("> ");
         }
@@ -126,6 +129,16 @@ namespace EasySave.UI
                 Console.WriteLine(_lang.GetText("delete_success"));
             else
                 Console.WriteLine(_lang.GetText("delete_not_found"));
+        }
+
+        private void ChangeLogFormatMenu()
+        {
+            Console.WriteLine($"\n{_lang.GetText("logformat_title")}");
+            Console.WriteLine(_lang.GetText("logformat_prompt"));
+            Console.Write("> ");
+            string format = GetUserChoice() == 2 ? "xml" : "json";
+            Logger.GetInstance().SetFormat(format);
+            Console.WriteLine(_lang.GetText("logformat_changed"));
         }
 
         private void ChangeLanguageMenu()
