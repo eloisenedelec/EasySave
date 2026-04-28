@@ -20,14 +20,14 @@ namespace EasySave.UI
 
             _translations = new Dictionary<string, string>();
 
-            LoadLanguage("fr"); // fr par d�faut
+            LoadLanguage("fr");
         }
 
         public static LanguageManager GetInstance() {
 
             if (_instance == null)
             {
-                lock (_lock) // verrou temp en cas de multi thread
+                lock (_lock)
                 {
                     if (_instance == null)
                     {
@@ -36,7 +36,7 @@ namespace EasySave.UI
                 }
             }
             return _instance;
-        } 
+        }
 
         public void LoadLanguage(string languageCode) {
 
@@ -49,17 +49,14 @@ namespace EasySave.UI
             }
             try
             {
-                string json = File.ReadAllText(filePath); // convert en str
+                string json = File.ReadAllText(filePath);
                 _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
                 _currentLanguage = languageCode;
-
-                Console.WriteLine($"[OK] Langue charg�e : {languageCode}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ERREUR] Impossible de charger la langue : {ex.Message}");
             }
-
         }
 
         public string GetText(string key) {
@@ -68,8 +65,7 @@ namespace EasySave.UI
             {
                 return _translations[key];
             }
-            return $"[{key}]"; // retourne la cl� si pas de valeur
-
-        } 
+            return $"[{key}]";
+        }
     }
 }

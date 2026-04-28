@@ -230,3 +230,17 @@ Toutes les strategies sont interchangeables via IBackupStrategy
 Interfaces petites et spécifiques (IBackupObserver, IBackupRepository)
 ### Dependency Inversion
 Dépendance aux abstractions (interfaces) plutôt qu'aux implémentations concrètes
+
+## Commandes d'execution
+
+### Mode menu 
+- cd EasySave et dotnet run
+
+### Mode Commandes
+cd EasySave\bin\Debug\net8.0 puis :
+- .\EasySave.exe list
+- .\EasySave.exe execute all
+- .\EasySave.exe execute <id1,id2,...>
+- .\EasySave.exe create --name <nom> --source <chemin> --target <chemin> [--type full|differential]
+- .\EasySave.exe delete <id>
+- Sans argument → menu interactif
