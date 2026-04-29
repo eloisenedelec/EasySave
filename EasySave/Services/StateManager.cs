@@ -81,7 +81,7 @@ namespace EasySave.Services
             Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' d�marr�e");
         }
 
-        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime)
+        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
         {
             if (_currentJobName != null && _states.ContainsKey(_currentJobName))
             {
