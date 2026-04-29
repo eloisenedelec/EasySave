@@ -45,8 +45,8 @@ namespace EasySave.Services
             }
         }
 
-        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime) {
-            NotifyFileProcessed(sourceFile, targetFile, fileSize, transferTime);
+        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs) {
+            NotifyFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTimeMs);
         }
         public void OnBackupStarted(string jobName, int totalFiles, long totalSize) {
             NotifyBackupStarted(jobName, totalFiles, totalSize);
@@ -58,8 +58,8 @@ namespace EasySave.Services
             NotifyBackupError(jobName, error);
         }
 
-        private void NotifyFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime) {
-            _observers.ForEach(o => o.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime));
+        private void NotifyFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs) {
+            _observers.ForEach(o => o.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTimeMs));
         }
         private void NotifyBackupStarted(string jobName, int totalFiles, long totalSize) {
             _observers.ForEach(o => o.OnBackupStarted(jobName, totalFiles, totalSize));
