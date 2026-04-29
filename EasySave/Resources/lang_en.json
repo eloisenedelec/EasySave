@@ -5,7 +5,8 @@
   "menu_list": "3. List all jobs",
   "menu_delete": "4. Delete a job",
   "menu_language": "5. Change language",
-  "menu_quit": "6. Quit",
+  "menu_logformat": "6. Change log format",
+  "menu_quit": "7. Quit",
   "create_title": "--- New job ---",
   "create_name": "Job name: ",
   "create_source": "Source path: ",
@@ -25,5 +26,8 @@
   "language_title": "--- Change language ---",
   "language_prompt": "Choose: 1) Français   2) English",
   "language_changed": "Language changed.",
+  "logformat_title": "--- Log format ---",
+  "logformat_prompt": "Choose: 1) JSON   2) XML",
+  "logformat_changed": "Log format changed.",
   "invalid_choice": "Invalid choice."
 }
