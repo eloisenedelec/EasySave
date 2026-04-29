@@ -10,7 +10,6 @@ namespace EasySave.Services
         private static object _lock = new object();
         private List<BackupJob> _jobs;
         private IBackupRepository _repository;
-        private int _maxJobs = 5;
          
         private BackupManager() {
             string filePath = Path.Combine(
@@ -37,7 +36,6 @@ namespace EasySave.Services
             return _instance;
         }
         public bool AddBackupJob(BackupJob job) {
-            if (_jobs.Count >= _maxJobs) return false;
 
             _jobs.Add(job);
             _repository.Save(_jobs);
