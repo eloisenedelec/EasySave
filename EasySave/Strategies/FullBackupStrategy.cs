@@ -27,7 +27,7 @@ namespace EasySave.Strategies
                     File.Copy(file, targetFile, true);
                     var transferTime = (DateTime.Now - startTime).Ticks;
 
-                    observer.OnFileProcessed(file, targetFile, fileSize, transferTime);
+                    observer.OnFileProcessed(file, targetFile, fileSize, transferTime, 0);
                 }
                 observer.OnBackupCompleted(job.Name);
             }
