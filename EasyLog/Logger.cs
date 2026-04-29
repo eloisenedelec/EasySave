@@ -57,7 +57,7 @@ namespace EasyLog
             _currentJobName = jobName;
         }
 
-        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime)
+        public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
         {
             _repository.Append(new LogEntry
             {
