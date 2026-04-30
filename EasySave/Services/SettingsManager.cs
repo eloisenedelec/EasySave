@@ -76,13 +76,10 @@ namespace EasySave.Services
 
         public void SetLogFormat(string format)
         {
-            if (!string.IsNullOrWhiteSpace(format))
+            if (!string.IsNullOrWhiteSpace(format) && (format.ToUpper() == "JSON" || format.ToUpper() == "XML"))
             {
-                if (format.ToUpper() == "JSON" || format.ToUpper() == "XML")
-                {
-                    _settings.LogFormat = format.ToUpper();
-                    _repository.Save(_settings);
-                }
+                _settings.LogFormat = format.ToUpper();
+                _repository.Save(_settings);
             }
         }
 
