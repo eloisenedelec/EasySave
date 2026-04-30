@@ -18,23 +18,23 @@ namespace EasySave.Repositories
             }
         }
 
-        public List<Process> Load()
+        public List<SettingsProcess> Load()
         {
             if (!File.Exists(_settingsFilePath))
             {
-                return new List<Process>();
+                return new List<SettingsProcess>();
             }
 
             string jsonString = File.ReadAllText(_settingsFilePath);
             if (string.IsNullOrWhiteSpace(jsonString))
             {
-                return new List<Process>();
+                return new List<SettingsProcess>();
             }
 
-            return JsonSerializer.Deserialize<List<Process>>(jsonString) ?? new List<Process>();
+            return JsonSerializer.Deserialize<List<SettingsProcess>>(jsonString) ?? new List<SettingsProcess>();
         }
 
-        public void SaveProcess(List<Process> processes)
+        public void SaveProcess(List<SettingsProcess> processes)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
             string jsonString = JsonSerializer.Serialize(processes, options);

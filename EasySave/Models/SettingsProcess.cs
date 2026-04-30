@@ -2,16 +2,16 @@
 
 namespace EasySave.Models
 {
-    public class Process
+    public class SettingsProcess
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
 
-        public Process()
+        public SettingsProcess()
         {
         }
 
-        public Process(int id, string name)
+        public SettingsProcess(int id, string name)
         {
             Id = id;
             Name = name;

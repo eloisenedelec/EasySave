@@ -4,8 +4,8 @@ namespace EasySave.Repositories
 {
     public interface ISettingsRepository
     {
-        List<Process> Load();
-        void SaveProcess(List<Process> processes);
+        List<SettingsProcess> Load();
+        void SaveProcess(List<SettingsProcess> processes);
         bool DeleteProcess(int id);
     }
 }

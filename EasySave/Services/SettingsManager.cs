@@ -10,7 +10,7 @@ namespace EasySave.Services
         private static readonly object _lock = new object();
 
         private readonly ISettingsRepository _repository;
-        private List<Process> _businessProcesses;
+        private List<SettingsProcess> _businessProcesses;
 
         private SettingsManager()
         {
@@ -40,17 +40,17 @@ namespace EasySave.Services
             return _instance;
         }
 
-        public List<Process> GetAllProcesses()
+        public List<SettingsProcess> GetAllProcesses()
         {
             return _businessProcesses.ToList();
         }
 
-        public Process? GetProcess(int id)
+        public SettingsProcess? GetProcess(int id)
         {
             return _businessProcesses.FirstOrDefault(p => p.Id == id);
         }
 
-        public bool AddProcess(Process process)
+        public bool AddProcess(SettingsProcess process)
         {
             if (process == null || string.IsNullOrWhiteSpace(process.Name))
             {
