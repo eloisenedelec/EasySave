@@ -18,42 +18,27 @@ namespace EasySave.Repositories
             }
         }
 
-        public List<SettingsProcess> Load()
+        public GlobalSettings Load()
         {
             if (!File.Exists(_settingsFilePath))
             {
-                return new List<SettingsProcess>();
+                return new GlobalSettings();
             }
 
             string jsonString = File.ReadAllText(_settingsFilePath);
             if (string.IsNullOrWhiteSpace(jsonString))
             {
-                return new List<SettingsProcess>();
+                return new GlobalSettings();
             }
 
-            return JsonSerializer.Deserialize<List<SettingsProcess>>(jsonString) ?? new List<SettingsProcess>();
+            return JsonSerializer.Deserialize<GlobalSettings>(jsonString) ?? new GlobalSettings();
         }
 
-        public void SaveProcess(List<SettingsProcess> processes)
+        public void Save(GlobalSettings settings)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(processes, options);
+            string jsonString = JsonSerializer.Serialize(settings, options);
             File.WriteAllText(_settingsFilePath, jsonString);
-        }
-
-        public bool DeleteProcess(int id)
-        {
-            var processes = Load();
-
-            var processToRemove = processes.FirstOrDefault(p => p.Id == id);
-            if (processToRemove == null)
-            {
-                return false;
-            }
-
-            processes.Remove(processToRemove);
-            SaveProcess(processes);
-            return true;
         }
     }
 }
