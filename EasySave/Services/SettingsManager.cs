@@ -41,7 +41,6 @@ namespace EasySave.Services
 
         // 1. GESTION DES LOGICIELS MÉTIERS
         public List<SettingsProcess> GetAllProcesses() => _settings.BusinessProcesses.ToList();
-
         public SettingsProcess? GetProcess(int id) => _settings.BusinessProcesses.FirstOrDefault(p => p.Id == id);
 
         public bool AddProcess(SettingsProcess process)
@@ -77,10 +76,13 @@ namespace EasySave.Services
 
         public void SetLogFormat(string format)
         {
-            if (format.ToUpper() == "JSON" || format.ToUpper() == "XML")
+            if (!string.IsNullOrWhiteSpace(format))
             {
-                _settings.LogFormat = format.ToUpper();
-                _repository.Save(_settings);
+                if (format.ToUpper() == "JSON" || format.ToUpper() == "XML")
+                {
+                    _settings.LogFormat = format.ToUpper();
+                    _repository.Save(_settings);
+                }
             }
         }
 
@@ -92,6 +94,8 @@ namespace EasySave.Services
         {
             if (!string.IsNullOrWhiteSpace(extension))
             {
+                extension = extension.ToLower();
+
                 if (!extension.StartsWith(".")) extension = "." + extension;
 
                 if (!_settings.EncryptedExtensions.Contains(extension))
@@ -104,12 +108,17 @@ namespace EasySave.Services
 
         public void RemoveExtension(string extension)
         {
-            if (!extension.StartsWith(".")) extension = "." + extension;
-
-            if (_settings.EncryptedExtensions.Contains(extension))
+            if (!string.IsNullOrWhiteSpace(extension))
             {
-                _settings.EncryptedExtensions.Remove(extension);
-                _repository.Save(_settings);
+                extension = extension.ToLower();
+
+                if (!extension.StartsWith(".")) extension = "." + extension;
+
+                if (_settings.EncryptedExtensions.Contains(extension))
+                {
+                    _settings.EncryptedExtensions.Remove(extension);
+                    _repository.Save(_settings);
+                }
             }
         }
     }
