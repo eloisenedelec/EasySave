@@ -1,4 +1,4 @@
-# Manuel de Support Technique - EasySave v1.1 & v2.0
+# Manuel de Support Technique - EasySave v2.0
 
 Ce document regroupe les informations techniques nécessaires au support client (Niveau 1 et 2) pour le dépannage et la configuration avancée du logiciel EasySave.
 
