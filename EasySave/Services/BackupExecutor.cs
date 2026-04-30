@@ -31,7 +31,7 @@ namespace EasySave.Services
             ProcessMonitoring pm = new ProcessMonitoring(SettingsManager.GetInstance());
             if (!pm.AreNoBusinessProcessesRunning())
             {
-                NotifyBackupError(job.Name, "Annulation : Logiciel métier en cours d'exécution.");
+                NotifyBackupError(job.Name, "Annulation : Logiciel mï¿½tier en cours d'exï¿½cution.");
                 return;
             }
 

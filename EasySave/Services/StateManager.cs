@@ -25,8 +25,6 @@ namespace EasySave.Services
 
             _stateFilePath = Path.Combine(easySavePath, "state.json");
             _states = new Dictionary<string, BackupState>();
-
-            Console.WriteLine($"[StateManager] Fichier d'�tat : {_stateFilePath}");
         }
 
         public static StateManager GetInstance()
@@ -44,7 +42,6 @@ namespace EasySave.Services
             return _instance;
         }
 
-
         public void UpdateState(BackupState state)
         {
             _states[state.JobName] = state;
@@ -57,7 +54,6 @@ namespace EasySave.Services
                 return _states[jobName];
             return null;
         }
-
 
         public void OnBackupStarted(string jobName, int totalFiles, long totalSize)
         {
@@ -77,8 +73,6 @@ namespace EasySave.Services
 
             _states[jobName] = state;
             SaveToFile();
-
-            Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' d�marr�e");
         }
 
         public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
@@ -95,8 +89,6 @@ namespace EasySave.Services
                 state.Timestamp = DateTime.Now;
 
                 SaveToFile();
-
-                Console.WriteLine($"[StateManager] Fichier trait� : {Path.GetFileName(sourceFile)} ({state.FilesProcessed}/{state.TotalFiles})");
             }
         }
 
@@ -111,8 +103,6 @@ namespace EasySave.Services
                 state.Timestamp = DateTime.Now;
 
                 SaveToFile();
-
-                Console.WriteLine($"[StateManager] Sauvegarde '{jobName}' termin�e");
             }
 
             _currentJobName = null;
@@ -127,29 +117,18 @@ namespace EasySave.Services
                 state.Timestamp = DateTime.Now;
 
                 SaveToFile();
-
-                Console.WriteLine($"[StateManager] Erreur dans '{jobName}': {error}");
             }
         }
-
 
         private void SaveToFile()
         {
             try
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true 
-                };
-
+                var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_states, options);
-
                 File.WriteAllText(_stateFilePath, json);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[StateManager] Erreur de sauvegarde : {ex.Message}");
-            }
+            catch { }
         }
     }
 }

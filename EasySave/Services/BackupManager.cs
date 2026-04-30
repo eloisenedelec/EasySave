@@ -53,7 +53,7 @@ namespace EasySave.Services
             return false;
         }
         public BackupJob? GetBackupJob(int id) { return _jobs.FirstOrDefault(j => j.Id == id); }
-        public List<BackupJob> GetAllBackupJobs() { return _jobs; } // TODO
-        public int GetJobCount() { return _jobs.Count; } // TODO
+        public List<BackupJob> GetAllBackupJobs() { return _jobs; }
+        public int GetJobCount() { return _jobs.Count; }
     }
 }

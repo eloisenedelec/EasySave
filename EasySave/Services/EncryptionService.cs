@@ -1,43 +1,30 @@
-﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace EasySave.Services
 {
     public class EncryptionService
     {
+        private static readonly byte[] Key = Encoding.UTF8.GetBytes("EasySave");
+
         public long EncryptFile(string sourceFile, string targetFile)
         {
-            Stopwatch stopwatch = new Stopwatch();
-
+            var stopwatch = Stopwatch.StartNew();
             try
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = "CryptoSoft.exe",
-                    Arguments = $"\"{sourceFile}\" \"{targetFile}\"",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-
-                stopwatch.Start();
-
-                using (Process process = Process.Start(startInfo))
-                {
-                    if (process != null)
-                    {
-                        process.WaitForExit();
-                    }
-                }
-
-                stopwatch.Stop();
-
-                return stopwatch.ElapsedMilliseconds;
+                byte[] data = File.ReadAllBytes(sourceFile);
+                for (int i = 0; i < data.Length; i++)
+                    data[i] ^= Key[i % Key.Length];
+                File.WriteAllBytes(targetFile, data);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[EncryptionService] Erreur lors du chiffrement : {ex.Message}");
+                Console.WriteLine($"[EncryptionService] Erreur : {ex.Message}");
                 return -1;
             }
+            stopwatch.Stop();
+            return stopwatch.ElapsedMilliseconds;
         }
     }
 }

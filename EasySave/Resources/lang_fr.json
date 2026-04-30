@@ -29,5 +29,30 @@
   "logformat_title": "--- Format des logs ---",
   "logformat_prompt": "Choisissez : 1) JSON   2) XML",
   "logformat_changed": "Format des logs changé.",
-  "invalid_choice": "Choix invalide."
+  "invalid_choice": "Choix invalide.",
+
+  "app_subtitle": "Backup Manager",
+  "btn_settings": "⚙ Paramètres",
+  "btn_execute_selected": "▶  Exécuter la sélection",
+  "tooltip_execute_job": "Exécuter ce job",
+  "tooltip_delete_job": "Supprimer ce job",
+  "tooltip_add_job": "Ajouter un job",
+
+  "addjob_title": "Nouveau job de sauvegarde",
+  "addjob_name": "Nom du job",
+  "addjob_source": "Dossier source",
+  "addjob_target": "Dossier destination",
+  "addjob_type": "Type de sauvegarde",
+  "btn_browse": "Parcourir",
+  "btn_cancel": "Annuler",
+  "addjob_create": "Créer la sauvegarde",
+
+  "settings_title": "Paramètres",
+  "settings_language": "LANGUE",
+  "settings_logformat": "FORMAT DES LOGS",
+  "settings_processes": "LOGICIELS MÉTIERS",
+  "settings_extensions": "EXTENSIONS À CHIFFRER",
+  "btn_add": "Ajouter",
+  "btn_save": "Enregistrer",
+  "btn_open_logs": "📂 Ouvrir les logs"
 }

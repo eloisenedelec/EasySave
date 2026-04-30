@@ -1,0 +1,331 @@
+<Window x:Class="EasySave.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:EasySave.Views"
+        xmlns:ui="clr-namespace:EasySave.UI"
+        Title="EasySave" Height="640" Width="820"
+        Icon="/Resources/logo.png"
+        MinHeight="480" MinWidth="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#E0E1DD">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- btn topbar -->
+        <Style x:Key="TopBarBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#E0E1DD"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1B263B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- btn executer-->
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#415A77"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,11"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1B263B"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- btn ligne supr ou run -->
+        <Style x:Key="RowActionBtn" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- barre de progress -->
+        <Style x:Key="ProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border x:Name="PART_Track" Background="#D0D3D8" CornerRadius="2" ClipToBounds="True">
+                            <Border x:Name="PART_Indicator" Background="#778DA9" CornerRadius="2" HorizontalAlignment="Left"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- grid qui superpose contenu + overlays -->
+    <Grid>
+
+        <!-- contenu principal -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="54"/>   <!-- TopBar -->
+                <RowDefinition Height="*"/>    <!-- Corps -->
+                <RowDefinition Height="Auto"/> <!-- StatusBar -->
+            </Grid.RowDefinitions>
+
+            <!-- ── topbar ── -->
+            <Border Grid.Row="0" Background="#415A77">
+                <Grid Margin="20,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="EasySave"
+                                   FontSize="16" FontWeight="Bold"
+                                   Foreground="#E0E1DD"/>
+                        <TextBlock Text="{Binding [app_subtitle], Source={x:Static ui:LanguageManager.Instance}}"
+                                   FontSize="11" Foreground="#A8B8C8"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Bottom"
+                                   Padding="0,0,0,1"/>
+                    </StackPanel>
+                    <Button Content="{Binding [btn_settings], Source={x:Static ui:LanguageManager.Instance}}"
+                            Style="{StaticResource TopBarBtn}"
+                            Command="{Binding OpenSettingsCommand}"
+                            HorizontalAlignment="Right"/>
+                </Grid>
+            </Border>
+
+            <!-- ── corps ── -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          Background="#E0E1DD">
+                <StackPanel Margin="32,28,32,32">
+
+                    <!-- liste des jobs -->
+                    <ItemsControl ItemsSource="{Binding Jobs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#FFFFFF"
+                                        BorderBrush="#D8DCE0"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16,12"
+                                        Margin="0,0,0,8">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#415A77"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- checkbox sélection -->
+                                        <CheckBox Grid.Column="0"
+                                                  IsChecked="{Binding IsSelected}"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,0,14,0"/>
+
+                                        <!-- badge type -->
+                                        <Border Grid.Column="1"
+                                                Background="#EEF2F7"
+                                                CornerRadius="4"
+                                                Padding="8,3"
+                                                Margin="0,0,14,0"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Job.Type}"
+                                                       Foreground="#415A77"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"/>
+                                        </Border>
+
+                                        <!-- nom + chemins -->
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Job.Name}"
+                                                       FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="#1B263B"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                <TextBlock Text="{Binding Job.SourcePath}"
+                                                           FontSize="11" Foreground="#778DA9"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxWidth="220"/>
+                                                <TextBlock Text=" → "
+                                                           FontSize="11" Foreground="#415A77"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Job.TargetPath}"
+                                                           FontSize="11" Foreground="#778DA9"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxWidth="220"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <!-- run ou delete -->
+                                        <StackPanel Grid.Column="3"
+                                                    Orientation="Horizontal"
+                                                    VerticalAlignment="Center"
+                                                    Margin="12,0,0,0">
+                                            <Button Background="#EEF2F7"
+                                                    Foreground="#415A77"
+                                                    Content="▶"
+                                                    Style="{StaticResource RowActionBtn}"
+                                                    ToolTip="{Binding [tooltip_execute_job], Source={x:Static ui:LanguageManager.Instance}}"
+                                                    Command="{Binding ExecuteOneCommand}"
+                                                    Margin="0,0,6,0"/>
+                                            <Button Background="#FDECEA"
+                                                    Foreground="#C0392B"
+                                                    Content="✕"
+                                                    Style="{StaticResource RowActionBtn}"
+                                                    ToolTip="{Binding [tooltip_delete_job], Source={x:Static ui:LanguageManager.Instance}}"
+                                                    Command="{Binding DeleteCommand}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- btn "+" add un job -->
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,16,0,0"
+                            Width="44" Height="44"
+                            FontSize="22"
+                            ToolTip="{Binding [tooltip_add_job], Source={x:Static ui:LanguageManager.Instance}}"
+                            Command="{Binding OpenAddJobCommand}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bd"
+                                        Background="#415A77"
+                                        CornerRadius="22"
+                                        Width="44" Height="44">
+                                    <TextBlock Text="+"
+                                               Foreground="#FFFFFF"
+                                               FontSize="22"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Margin="0,-2,0,0"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#1B263B"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- btn run la selection-->
+                    <Button Content="{Binding [btn_execute_selected], Source={x:Static ui:LanguageManager.Instance}}"
+                            Style="{StaticResource PrimaryBtn}"
+                            Command="{Binding ExecuteSelectedCommand}"
+                            HorizontalAlignment="Center"
+                            Margin="0,20,0,0"
+                            Visibility="{Binding HasSelectedJobs, Converter={StaticResource BoolToVis}}"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── bar status ── -->
+            <Border Grid.Row="2"
+                    Background="#1B263B"
+                    Padding="24,12"
+                    Visibility="{Binding HasStatus, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#E0E1DD"/>
+                        <TextBlock Text="{Binding CurrentFile}"
+                                   FontSize="11" Foreground="#778DA9"
+                                   Margin="0,3,0,6"
+                                   Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <ProgressBar Value="{Binding Progress, Mode=OneWay}"
+                                     Minimum="0" Maximum="100"
+                                     Style="{StaticResource ProgressBarStyle}"
+                                     Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding ProgressText}"
+                               FontSize="12" Foreground="#778DA9"
+                               VerticalAlignment="Center"
+                               Margin="16,0,0,0"
+                               Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- overlay ajt de job -->
+        <Grid Background="#88000000"
+              Visibility="{Binding IsAddingJob, Converter={StaticResource BoolToVis}}">
+            <views:AddJobOverlay DataContext="{Binding AddJobVM}"/>
+        </Grid>
+
+        <!-- overlay params -->
+        <Grid Background="#88000000"
+              Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
+            <views:SettingsOverlay DataContext="{Binding SettingsVM}"/>
+        </Grid>
+
+    </Grid>
+</Window>
