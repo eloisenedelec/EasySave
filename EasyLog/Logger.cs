@@ -47,7 +47,7 @@ namespace EasyLog
                 "EasySave",
                 "Logs"
             );
-            _repository = format == "xml"
+            _repository = format.Equals("xml", StringComparison.OrdinalIgnoreCase)
                 ? new XmlLogRepository(logDirectory)
                 : new JsonLogRepository(logDirectory);
         }

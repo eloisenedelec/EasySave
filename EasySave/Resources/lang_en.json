@@ -29,5 +29,30 @@
   "logformat_title": "--- Log format ---",
   "logformat_prompt": "Choose: 1) JSON   2) XML",
   "logformat_changed": "Log format changed.",
-  "invalid_choice": "Invalid choice."
+  "invalid_choice": "Invalid choice.",
+
+  "app_subtitle": "Backup Manager",
+  "btn_settings": "⚙ Settings",
+  "btn_execute_selected": "▶  Execute selected",
+  "tooltip_execute_job": "Execute this job",
+  "tooltip_delete_job": "Delete this job",
+  "tooltip_add_job": "Add a job",
+
+  "addjob_title": "New backup job",
+  "addjob_name": "Job name",
+  "addjob_source": "Source folder",
+  "addjob_target": "Target folder",
+  "addjob_type": "Backup type",
+  "btn_browse": "Browse",
+  "btn_cancel": "Cancel",
+  "addjob_create": "Create backup",
+
+  "settings_title": "Settings",
+  "settings_language": "LANGUAGE",
+  "settings_logformat": "LOG FORMAT",
+  "settings_processes": "BUSINESS SOFTWARE",
+  "settings_extensions": "ENCRYPTED EXTENSIONS",
+  "btn_add": "Add",
+  "btn_save": "Save",
+  "btn_open_logs": "📂 Open logs"
 }

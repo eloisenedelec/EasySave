@@ -1,45 +1,43 @@
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 
 namespace EasySave.UI
 {
-    public class LanguageManager
+    public class LanguageManager : INotifyPropertyChanged
     {
         private static LanguageManager? _instance;
         private static readonly object _lock = new object();
-        private string _currentLanguage = string.Empty;
         private string _resourcesPath;
         private Dictionary<string, string> _translations;
 
-        private LanguageManager() {
+        public static LanguageManager Instance => GetInstance();
 
+        private LanguageManager()
+        {
             _resourcesPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "Resources"
             );
-
             _translations = new Dictionary<string, string>();
-
             LoadLanguage("fr");
         }
 
-        public static LanguageManager GetInstance() {
-
+        public static LanguageManager GetInstance()
+        {
             if (_instance == null)
             {
                 lock (_lock)
                 {
                     if (_instance == null)
-                    {
                         _instance = new LanguageManager();
-                    }
                 }
             }
             return _instance;
         }
 
-        public void LoadLanguage(string languageCode) {
-
+        public void LoadLanguage(string languageCode)
+        {
             string filePath = Path.Combine(_resourcesPath, $"lang_{languageCode}.json");
 
             if (!File.Exists(filePath))
@@ -51,7 +49,7 @@ namespace EasySave.UI
             {
                 string json = File.ReadAllText(filePath);
                 _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
-                _currentLanguage = languageCode;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
             }
             catch (Exception ex)
             {
@@ -59,13 +57,10 @@ namespace EasySave.UI
             }
         }
 
-        public string GetText(string key) {
+        public string this[string key] => _translations.TryGetValue(key, out var val) ? val : $"[{key}]";
 
-            if (_translations.ContainsKey(key))
-            {
-                return _translations[key];
-            }
-            return $"[{key}]";
-        }
+        public string GetText(string key) => this[key];
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }
