@@ -11,5 +11,8 @@ namespace EasySave.Models
         public List<SettingsProcess> BusinessProcesses { get; set; } = new List<SettingsProcess>();
         public string LogFormat { get; set; } = "JSON";
         public List<string> EncryptedExtensions { get; set; } = new List<string>();
+        public List<string> PriorityExtensions { get; set; } = new List<string>();
+        public long LargeFileSizeLimit { get; set; } = 100 * 1024;
+        public string? LogServerUrl { get; set; }
     }
 }

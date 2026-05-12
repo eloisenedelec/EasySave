@@ -83,6 +83,13 @@ namespace EasySave.Services
             }
         }
 
+        public string GetLogServerUrl() => _settings.LogServerUrl ?? "";
+        public void SetLogServerUrl(string url) 
+        { 
+            _settings.LogServerUrl = url; 
+            _repository.Save(_settings); 
+        }
+
 
         // 3. GESTION DES EXTENSIONS À CHIFFRER
         public List<string> GetEncryptedExtensions() => _settings.EncryptedExtensions.ToList();
@@ -117,6 +124,48 @@ namespace EasySave.Services
                     _repository.Save(_settings);
                 }
             }
+        }
+
+        // 4. EXTENSION PRIORITAIRE (V3)
+        public bool IsFilePriority(string filePath)
+        {
+            var extension = System.IO.Path.GetExtension(filePath).ToLower();
+            return _settings.PriorityExtensions.Contains(extension);
+        }
+
+        public List<string> GetPriorityExtensions() => _settings.PriorityExtensions.ToList();
+
+        public void AddPriorityExtension(string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension)) return;
+            extension = extension.ToLower();
+            if (!extension.StartsWith(".")) extension = "." + extension;
+
+            if (!_settings.PriorityExtensions.Contains(extension))
+            {
+                _settings.PriorityExtensions.Add(extension);
+                _repository.Save(_settings);
+            }
+        }
+
+        public void RemovePriorityExtension(string extension)
+        {
+            extension = extension.ToLower();
+            if (!extension.StartsWith(".")) extension = "." + extension;
+
+            if (_settings.PriorityExtensions.Remove(extension))
+            {
+                _repository.Save(_settings);
+            }
+        }
+
+        // 5. GESTION DE LA TAILLE LIMITE POUR LES FICHIERS LOURDS (V3)
+        public long GetLargeFileSizeLimit() => _settings.LargeFileSizeLimit;
+
+        public void SetLargeFileSizeLimit(long sizeInBytes)
+        {
+            _settings.LargeFileSizeLimit = sizeInBytes;
+            _repository.Save(_settings);
         }
     }
 }
