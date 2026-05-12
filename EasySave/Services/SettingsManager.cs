@@ -83,6 +83,13 @@ namespace EasySave.Services
             }
         }
 
+        public string GetLogServerUrl() => _settings.LogServerUrl ?? "";
+        public void SetLogServerUrl(string url) 
+        { 
+            _settings.LogServerUrl = url; 
+            _repository.Save(_settings); 
+        }
+
 
         // 3. GESTION DES EXTENSIONS À CHIFFRER
         public List<string> GetEncryptedExtensions() => _settings.EncryptedExtensions.ToList();

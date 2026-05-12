@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyLog", "EasyLog\EasyLog.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyLog.Contracts", "EasyLog.Contracts\EasyLog.Contracts.csproj", "{755179F9-2D57-48D6-9E4E-C2A073B01F4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Tests", "EasySave.Tests\EasySave.Tests.csproj", "{EF754110-7C3C-4D62-84BF-151AC0828D9A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{755179F9-2D57-48D6-9E4E-C2A073B01F4F}.Release|x64.Build.0 = Release|Any CPU
 		{755179F9-2D57-48D6-9E4E-C2A073B01F4F}.Release|x86.ActiveCfg = Release|Any CPU
 		{755179F9-2D57-48D6-9E4E-C2A073B01F4F}.Release|x86.Build.0 = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|x64.Build.0 = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Debug|x86.Build.0 = Debug|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|x64.ActiveCfg = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|x64.Build.0 = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|x86.ActiveCfg = Release|Any CPU
+		{EF754110-7C3C-4D62-84BF-151AC0828D9A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
