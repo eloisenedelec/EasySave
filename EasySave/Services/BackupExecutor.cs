@@ -2,13 +2,15 @@ using EasySave.Factories;
 using EasySave.Models;
 using EasySave.Observers;
 using EasySave.Strategies;
-using EasySave.Services;
+using EasyLog.Contracts;
+using System.IO;
 
 namespace EasySave.Services
 {
     public class BackupExecutor : IBackupObserver
     {
         private List<IBackupObserver> _observers;
+        private readonly CryptoSoftManager _cryptoManager = new();
 
         public BackupExecutor()
         {
@@ -28,21 +30,48 @@ namespace EasySave.Services
         }
         public void ExecuteBackup(BackupJob job)
         {
-            ProcessMonitoring pm = new ProcessMonitoring(SettingsManager.GetInstance());
+            // Utilisation du SettingsManager pour vérifier les extensions à chiffrer
+            var settings = SettingsManager.GetInstance();
+            var encryptedExtensions = settings.GetEncryptedExtensions();
+
+            // Monitoring existant
+            ProcessMonitoring pm = new ProcessMonitoring(settings);
             if (!pm.AreNoBusinessProcessesRunning())
             {
-                NotifyBackupError(job.Name, "Annulation : Logiciel m�tier en cours d'ex�cution.");
+                NotifyBackupError(job.Name, "Annulation : Logiciel métier en cours d'exécution.");
                 return;
             }
 
             try
             {
+                // On passe désormais 'this' (l'executor) à la stratégie pour qu'elle utilise nos méthodes
                 IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(job.Type);
                 strategy.Execute(job, this);
             }
             catch (Exception ex)
             {
                 NotifyBackupError(job.Name, ex.Message);
+            }
+        }
+
+        // NOUVELLE MÉTHODE : Centralise la logique de copie et le chiffrement
+        public void ProcessFileCopy(string source, string target)
+        {
+            var settings = SettingsManager.GetInstance();
+            string extension = Path.GetExtension(source).ToLower();
+
+            // Vérifie si l'extension doit être chiffrée selon settings.json
+            bool shouldEncrypt = settings.GetEncryptedExtensions().Contains(extension);
+
+            if (shouldEncrypt)
+            {
+                // Utilise le CryptoSoftManager avec son Mutex global
+                _cryptoManager.EncryptFile(source, target);
+            }
+            else
+            {
+                // Copie standard
+                File.Copy(source, target, true);
             }
         }
         public void ExecuteMultipleBackups(List<int> jobIds)
@@ -98,5 +127,7 @@ namespace EasySave.Services
         {
             _observers.ForEach(o => o.OnBackupError(jobName, error));
         }
+
+
     }
 }

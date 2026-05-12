@@ -1,10 +1,11 @@
 ﻿using System.IO;
 using EasySave.Models;
 using EasySave.Repositories;
+using EasyLog.Contracts;
 
 namespace EasySave.Services
 {
-    public class SettingsManager
+    public class SettingsManager : ILogSettings
     {
         private static SettingsManager? _instance;
         private static readonly object _lock = new object();
@@ -46,9 +47,7 @@ namespace EasySave.Services
         public bool AddProcess(SettingsProcess process)
         {
             if (process == null || string.IsNullOrWhiteSpace(process.Name)) return false;
-
             if (process.Id <= 0) process.Id = GetNextId();
-
             if (_settings.BusinessProcesses.Any(p => p.Id == process.Id)) return false;
 
             _settings.BusinessProcesses.Add(process);
@@ -70,7 +69,6 @@ namespace EasySave.Services
             ? 1
             : _settings.BusinessProcesses.Max(p => p.Id) + 1;
 
-
         // 2. GESTION DU FORMAT DE LOG (JSON / XML)
         public string GetLogFormat() => _settings.LogFormat;
 
@@ -83,40 +81,63 @@ namespace EasySave.Services
             }
         }
 
-
         // 3. GESTION DES EXTENSIONS À CHIFFRER
         public List<string> GetEncryptedExtensions() => _settings.EncryptedExtensions.ToList();
 
         public void AddExtension(string extension)
         {
-            if (!string.IsNullOrWhiteSpace(extension))
+            if (string.IsNullOrWhiteSpace(extension)) return;
+            extension = extension.ToLower();
+            if (!extension.StartsWith(".")) extension = "." + extension;
+
+            if (!_settings.EncryptedExtensions.Contains(extension))
             {
-                extension = extension.ToLower();
-
-                if (!extension.StartsWith(".")) extension = "." + extension;
-
-                if (!_settings.EncryptedExtensions.Contains(extension))
-                {
-                    _settings.EncryptedExtensions.Add(extension);
-                    _repository.Save(_settings);
-                }
+                _settings.EncryptedExtensions.Add(extension);
+                _repository.Save(_settings);
             }
         }
 
         public void RemoveExtension(string extension)
         {
-            if (!string.IsNullOrWhiteSpace(extension))
+            if (string.IsNullOrWhiteSpace(extension)) return;
+            extension = extension.ToLower();
+            if (!extension.StartsWith(".")) extension = "." + extension;
+
+            if (_settings.EncryptedExtensions.Contains(extension))
             {
-                extension = extension.ToLower();
-
-                if (!extension.StartsWith(".")) extension = "." + extension;
-
-                if (_settings.EncryptedExtensions.Contains(extension))
-                {
-                    _settings.EncryptedExtensions.Remove(extension);
-                    _repository.Save(_settings);
-                }
+                _settings.EncryptedExtensions.Remove(extension);
+                _repository.Save(_settings);
             }
+        }
+
+        // --- AJOUTS PERSONNE 2 (Nécessaire pour la cohérence globale) ---
+
+        public List<string> GetPriorityExtensions() => _settings.PriorityExtensions ?? new List<string>();
+
+        public int GetLargeFileThresholdKb() => _settings.LargeFileThresholdKb;
+
+        public void SetLargeFileThresholdKb(int threshold)
+        {
+            _settings.LargeFileThresholdKb = threshold;
+            _repository.Save(_settings);
+        }
+
+        // --- TES MODIFS (PERSONNE 4) ---
+
+        public LogMode GetLogMode() => _settings.LogMode;
+
+        public void SetLogMode(LogMode mode)
+        {
+            _settings.LogMode = mode;
+            _repository.Save(_settings);
+        }
+
+        public string GetLogServerUrl() => _settings.LogServerUrl ?? "http://localhost:5000";
+
+        public void SetLogServerUrl(string url)
+        {
+            _settings.LogServerUrl = url;
+            _repository.Save(_settings);
         }
     }
 }

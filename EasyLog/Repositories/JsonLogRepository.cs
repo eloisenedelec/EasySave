@@ -1,4 +1,6 @@
 using System.Text.Json;
+using EasyLog.Contracts;
+
 
 namespace EasyLog.Repositories
 {

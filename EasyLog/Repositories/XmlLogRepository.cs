@@ -1,4 +1,6 @@
 using System.Xml.Serialization;
+using EasyLog.Contracts;
+
 
 namespace EasyLog.Repositories
 {
