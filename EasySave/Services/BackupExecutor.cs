@@ -1,19 +1,12 @@
-using EasySave.Factories;
 using EasySave.Models;
 using EasySave.Observers;
-using EasySave.Strategies;
-using EasySave.Services;
 
 namespace EasySave.Services
 {
     public class BackupExecutor : IBackupObserver
     {
-        private List<IBackupObserver> _observers;
-
-        public BackupExecutor()
-        {
-            _observers = new List<IBackupObserver>();
-        }
+        private readonly List<IBackupObserver> _observers = new();
+        private readonly BackupOrchestrator _orchestrator = new();
 
         public void AddObserver(IBackupObserver observer)
         {
@@ -22,46 +15,53 @@ namespace EasySave.Services
                 _observers.Add(observer);
             }
         }
+
         public void RemoveObserver(IBackupObserver observer)
         {
             _observers.Remove(observer);
         }
+
         public void ExecuteBackup(BackupJob job)
         {
-            ProcessMonitoring pm = new ProcessMonitoring(SettingsManager.GetInstance());
-            if (!pm.AreNoBusinessProcessesRunning())
+            ExecuteJobsAsync(new[] { job }).GetAwaiter().GetResult();
+        }
+
+        public void ExecuteMultipleBackups(List<int> jobIds)
+        {
+            var jobs = BackupManager.GetInstance()
+                .GetAllBackupJobs()
+                .Where(job => jobIds.Contains(job.Id))
+                .ToList();
+
+            ExecuteJobsAsync(jobs).GetAwaiter().GetResult();
+        }
+
+        private async Task ExecuteJobsAsync(IEnumerable<BackupJob> jobs)
+        {
+            var jobList = jobs.ToList();
+            if (jobList.Count == 0)
             {
-                NotifyBackupError(job.Name, "Annulation : Logiciel m�tier en cours d'ex�cution.");
                 return;
+            }
+
+            _orchestrator.Clear();
+
+            foreach (var job in jobList)
+            {
+                _orchestrator.CreateTask(job, this);
             }
 
             try
             {
-                IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(job.Type);
-                strategy.Execute(job, this);
+                await _orchestrator.RunAllAsync();
             }
             catch (Exception ex)
             {
-                NotifyBackupError(job.Name, ex.Message);
+                NotifyBackupError("BackupExecutor", ex.Message);
             }
-        }
-        public void ExecuteMultipleBackups(List<int> jobIds)
-        {
-            BackupManager manager = BackupManager.GetInstance();
-            ProcessMonitoring pm = new ProcessMonitoring(SettingsManager.GetInstance());
-
-            foreach (int id in jobIds)
+            finally
             {
-                if (!pm.AreNoBusinessProcessesRunning())
-                {
-                    break;
-                }
-
-                var job = manager.GetBackupJob(id);
-                if (job != null)
-                {
-                    ExecuteBackup(job);
-                }
+                _orchestrator.Clear();
             }
         }
 
@@ -69,14 +69,17 @@ namespace EasySave.Services
         {
             NotifyFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTimeMs);
         }
+
         public void OnBackupStarted(string jobName, int totalFiles, long totalSize)
         {
             NotifyBackupStarted(jobName, totalFiles, totalSize);
         }
+
         public void OnBackupCompleted(string jobName)
         {
             NotifyBackupCompleted(jobName);
         }
+
         public void OnBackupError(string jobName, string error)
         {
             NotifyBackupError(jobName, error);
@@ -86,14 +89,17 @@ namespace EasySave.Services
         {
             _observers.ForEach(o => o.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTimeMs));
         }
+
         private void NotifyBackupStarted(string jobName, int totalFiles, long totalSize)
         {
             _observers.ForEach(o => o.OnBackupStarted(jobName, totalFiles, totalSize));
         }
+
         private void NotifyBackupCompleted(string jobName)
         {
             _observers.ForEach(o => o.OnBackupCompleted(jobName));
         }
+
         private void NotifyBackupError(string jobName, string error)
         {
             _observers.ForEach(o => o.OnBackupError(jobName, error));

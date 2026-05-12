@@ -9,7 +9,7 @@ namespace EasySave.Strategies
     {
         private readonly EncryptionService _encryption = new();
 
-        public void Execute(BackupJob job, IBackupObserver observer) {
+        public void Execute(BackupJob job, BackupExecutionContext context) {
             string sourcePath = job.SourcePath;
             string targetPath = job.TargetPath;
 
@@ -17,11 +17,14 @@ namespace EasySave.Strategies
             long totalSize = files.Sum(f => new FileInfo(f).Length);
             var encryptedExtensions = SettingsManager.GetInstance().GetEncryptedExtensions();
 
-            observer.OnBackupStarted(job.Name, files.Length, totalSize);
+            context.Observer.OnBackupStarted(job.Name, files.Length, totalSize);
             try
             {
                 foreach (var file in files)
                 {
+
+                    context.CheckPauseAndCancellation();
+
                     var relativePath = Path.GetRelativePath(sourcePath, file);
                     var targetFile = Path.Combine(targetPath, relativePath);
 
@@ -37,13 +40,18 @@ namespace EasySave.Strategies
                         File.Copy(file, targetFile, true);
                     var transferTime = (DateTime.Now - startTime).Ticks;
 
-                    observer.OnFileProcessed(file, targetFile, fileSize, transferTime, encryptionTime);
+                    context.Observer.OnFileProcessed(file, targetFile, fileSize, transferTime, encryptionTime);
                 }
-                observer.OnBackupCompleted(job.Name);
+                context.Observer.OnBackupCompleted(job.Name);
+            }
+            
+            catch (OperationCanceledException)
+            {
+                context.Observer.OnBackupError(job.Name, "Sauvegarde annulée");
             }
             catch (Exception ex)
             {
-                observer.OnBackupError(job.Name, ex.Message);
+                context.Observer.OnBackupError(job.Name, ex.Message);
             }
         }
     }
