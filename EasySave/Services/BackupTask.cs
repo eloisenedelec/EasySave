@@ -73,9 +73,6 @@ namespace EasySave.Services
 
         private async Task ExecuteStrategyAsync(IBackupStrategy strategy)
         {
-            // Exécuter la stratégie de manière asynchrone
-            // Pour le moment, on l'exécute de façon synchrone car les stratégies ne sont pas async
-            // C'est accepté car on les lance via Task.Run dans BackupOrchestrator
             var executionContext = new BackupExecutionContext(
                 CancellationTokenSource.Token,
                 PauseEvent,
@@ -122,7 +119,7 @@ namespace EasySave.Services
         }
     }
 
-    /// Contexte d'exécution fourni à la stratégie pour accéder aux signaux d'annulation et de pause.
+    
     public class BackupExecutionContext
     {
         public CancellationToken CancellationToken { get; }
@@ -136,7 +133,7 @@ namespace EasySave.Services
             Observer = observer;
         }
 
-        /// Attend que l'exécution soit reprise si elle est en pause, ou jette une exception si annulation demandée.
+        
         public void CheckPauseAndCancellation()
         {
             CancellationToken.ThrowIfCancellationRequested();
