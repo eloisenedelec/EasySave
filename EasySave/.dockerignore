@@ -1,0 +1,8 @@
+﻿# Ignorer le Dockerfile dans TOUS les sous-dossiers
+**/Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Dossiers de compilation
+**/bin/
+**/obj/
