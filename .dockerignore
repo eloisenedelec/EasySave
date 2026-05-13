@@ -1,0 +1,8 @@
+﻿# Fichiers Docker à ignorer pendant la copie
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Dossiers de compilation locaux à ignorer (accélère énormément le build !)
+**/bin/
+**/obj/

@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json;
 
-namespace EasyLog
+namespace EasyLog.Contracts
 {
     public class LogEntry
     {
@@ -12,6 +12,8 @@ namespace EasyLog
         public long FileSize { get; set; }
         public long TransferTimeMs { get; set; }
         public long EncryptionTimeMs { get; set; }
+        public string MachineName { get; set; }
+        public string UserName { get; set; }
 
         public LogEntry()
         {
@@ -19,6 +21,8 @@ namespace EasyLog
             JobName = string.Empty;
             SourceFile = string.Empty;
             TargetFile = string.Empty;
+            MachineName = Environment.MachineName;
+            UserName = Environment.UserName;
         }
 
         public string ToJson() 
