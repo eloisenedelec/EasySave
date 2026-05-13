@@ -1,7 +1,10 @@
-﻿using System.IO;
+using System.IO;
 using EasySave.Models;
 using EasySave.Repositories;
 using EasyLog.Contracts;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace EasySave.Services
 {
@@ -81,13 +84,22 @@ namespace EasySave.Services
             }
         }
 
-        public string GetLogServerUrl() => _settings.LogServerUrl ?? "";
-        public void SetLogServerUrl(string url) 
-        { 
-            _settings.LogServerUrl = url; 
-            _repository.Save(_settings); 
+        // --- TES MODIFS CENTRALISATION DOCKER (PERSONNE 4) ---
+        public LogMode GetLogMode() => _settings.LogMode;
+
+        public void SetLogMode(LogMode mode)
+        {
+            _settings.LogMode = mode;
+            _repository.Save(_settings);
         }
 
+        public string GetLogServerUrl() => _settings.LogServerUrl ?? "http://localhost:5000";
+
+        public void SetLogServerUrl(string url)
+        {
+            _settings.LogServerUrl = url;
+            _repository.Save(_settings);
+        }
 
         // 3. GESTION DES EXTENSIONS À CHIFFRER
         public List<string> GetEncryptedExtensions() => _settings.EncryptedExtensions.ToList();
@@ -118,44 +130,15 @@ namespace EasySave.Services
             }
         }
 
-        // --- AJOUTS PERSONNE 2 (Nécessaire pour la cohérence globale) ---
-
-        public List<string> GetPriorityExtensions() => _settings.PriorityExtensions ?? new List<string>();
-
-        public int GetLargeFileThresholdKb() => _settings.LargeFileThresholdKb;
-
-        public void SetLargeFileThresholdKb(int threshold)
-        {
-            _settings.LargeFileThresholdKb = threshold;
-            _repository.Save(_settings);
-        }
-
-        // --- TES MODIFS (PERSONNE 4) ---
-
-        public LogMode GetLogMode() => _settings.LogMode;
-
-        public void SetLogMode(LogMode mode)
-        {
-            _settings.LogMode = mode;
-            _repository.Save(_settings);
-        }
-
-        public string GetLogServerUrl() => _settings.LogServerUrl ?? "http://localhost:5000";
-
-        public void SetLogServerUrl(string url)
-        {
-            _settings.LogServerUrl = url;
-            _repository.Save(_settings);
-        }
-
-        // 4. EXTENSION PRIORITAIRE (V3)
+        // 4. EXTENSIONS PRIORITAIRES (PERSONNE 2 / V3)
         public bool IsFilePriority(string filePath)
         {
             var extension = System.IO.Path.GetExtension(filePath).ToLower();
             return _settings.PriorityExtensions.Contains(extension);
         }
 
-        public List<string> GetPriorityExtensions() => _settings.PriorityExtensions.ToList();
+        // Fusion propre des deux méthodes de tes collègues
+        public List<string> GetPriorityExtensions() => _settings.PriorityExtensions?.ToList() ?? new List<string>();
 
         public void AddPriorityExtension(string extension)
         {
