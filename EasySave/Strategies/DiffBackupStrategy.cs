@@ -17,8 +17,7 @@ namespace EasySave.Strategies
             return new FileInfo(sourceFile).LastWriteTime > new FileInfo(backupFile).LastWriteTime;
         }
 
-        public void Execute(BackupJob job, BackupExecutor executor)
-        {
+        public void Execute(BackupJob job, BackupExecutionContext context) {
             string sourcePath = job.SourcePath;
             string targetPath = job.TargetPath;
 
@@ -29,13 +28,14 @@ namespace EasySave.Strategies
 
             long totalSize = modifiedFiles.Sum(f => new FileInfo(f).Length);
 
-            // On utilise l'executor au lieu de l'observer
-            executor.OnBackupStarted(job.Name, modifiedFiles.Count, totalSize);
-
+            context.Observer.OnBackupStarted(job.Name, modifiedFiles.Count, totalSize);
             try
             {
                 foreach (var sourceFile in modifiedFiles)
                 {
+
+                    context.CheckPauseAndCancellation();
+
                     var relative = Path.GetRelativePath(sourcePath, sourceFile);
                     var targetFile = Path.Combine(targetPath, relative);
 
@@ -49,13 +49,17 @@ namespace EasySave.Strategies
 
                     var transferTime = (DateTime.Now - startTime).Ticks;
 
-                    executor.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, 0);
+                    context.Observer.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTime);
                 }
-                executor.OnBackupCompleted(job.Name);
+                context.Observer.OnBackupCompleted(job.Name);
+            }
+            catch (OperationCanceledException)
+            {
+                context.Observer.OnBackupError(job.Name, "Sauvegarde annulée");
             }
             catch (Exception ex)
             {
-                executor.OnBackupError(job.Name, ex.Message);
+                context.Observer.OnBackupError(job.Name, ex.Message);
             }
         }
     }
