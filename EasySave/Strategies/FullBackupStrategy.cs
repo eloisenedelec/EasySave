@@ -16,6 +16,10 @@ namespace EasySave.Strategies
             var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
             long totalSize = files.Sum(f => new FileInfo(f).Length);
             var encryptedExtensions = SettingsManager.GetInstance().GetEncryptedExtensions();
+            var settings = SettingsManager.GetInstance();
+            var prioExtensions = settings.GetPriorityExtensions();
+            int prioCount = files.Count(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()));
+            context.PriorityTracker.RegisterJobPriorityFiles(job.Id, prioCount);
 
             context.Observer.OnBackupStarted(job.Name, files.Length, totalSize);
             try
@@ -24,6 +28,17 @@ namespace EasySave.Strategies
                 {
 
                     context.CheckPauseAndCancellation();
+
+                    var extension = Path.GetExtension(file).ToLower();
+                    var isPriorityFile = prioExtensions.Contains(extension);
+
+                    if (!isPriorityFile)
+                    {
+                        context.PriorityTracker.WaitForPriorityIfNeeded(
+                            Timeout.InfiniteTimeSpan,
+                            context.CancellationToken
+                        );
+                    }
 
                     var relativePath = Path.GetRelativePath(sourcePath, file);
                     var targetFile = Path.Combine(targetPath, relativePath);
@@ -34,13 +49,18 @@ namespace EasySave.Strategies
                     long encryptionTime = 0;
 
                     var startTime = DateTime.Now;
-                    if (encryptedExtensions.Contains(Path.GetExtension(file).ToLower()))
+                    if (encryptedExtensions.Contains(extension))
                         encryptionTime = _encryption.EncryptFile(file, targetFile);
                     else
                         File.Copy(file, targetFile, true);
                     var transferTime = (DateTime.Now - startTime).Ticks;
 
                     context.Observer.OnFileProcessed(file, targetFile, fileSize, transferTime, encryptionTime);
+
+                    if (isPriorityFile)
+                    {
+                        context.PriorityTracker.PriorityFileFinished(job.Id);
+                    }
                 }
                 context.Observer.OnBackupCompleted(job.Name);
             }

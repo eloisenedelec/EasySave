@@ -14,11 +14,15 @@ namespace EasySave.Services
 
         private readonly IBackupObserver _observer;
         private string? _errorMessage;
+        private readonly GlobalPriorityTracker _tracker;
+        private readonly LargeFileCoordinator _coordinator;
 
-        public BackupTask(BackupJob job, IBackupObserver observer)
+        public BackupTask(BackupJob job, IBackupObserver observer, GlobalPriorityTracker tracker, LargeFileCoordinator coordinator)
         {
             Job = job;
             _observer = observer;
+            _tracker = tracker;
+            _coordinator = coordinator;
             State = BackupTaskState.Idle;
             CancellationTokenSource = new CancellationTokenSource();
             PauseEvent = new ManualResetEventSlim(true); // Initialisé à signalé (pas en pause)
@@ -76,7 +80,9 @@ namespace EasySave.Services
             var executionContext = new BackupExecutionContext(
                 CancellationTokenSource.Token,
                 PauseEvent,
-                _observer
+                _observer,
+                _tracker,
+                _coordinator
             );
             strategy.Execute(Job, executionContext);
             await Task.CompletedTask;
@@ -119,21 +125,25 @@ namespace EasySave.Services
         }
     }
 
-    
+    /// Contexte d'exécution fourni à la stratégie pour accéder aux signaux d'annulation et de pause.
     public class BackupExecutionContext
     {
         public CancellationToken CancellationToken { get; }
         public ManualResetEventSlim PauseEvent { get; }
         public IBackupObserver Observer { get; }
+        public GlobalPriorityTracker PriorityTracker { get; }
+        public LargeFileCoordinator FileCoordinator { get; }
 
-        public BackupExecutionContext(CancellationToken cancellationToken, ManualResetEventSlim pauseEvent, IBackupObserver observer)
+        public BackupExecutionContext(CancellationToken cancellationToken, ManualResetEventSlim pauseEvent, IBackupObserver observer, GlobalPriorityTracker priorityTracker, LargeFileCoordinator fileCoordinator)
         {
             CancellationToken = cancellationToken;
             PauseEvent = pauseEvent;
             Observer = observer;
+            PriorityTracker = priorityTracker;
+            FileCoordinator = fileCoordinator;
         }
 
-        
+        /// Attend que l'exécution soit reprise si elle est en pause, ou jette une exception si annulation demandée.
         public void CheckPauseAndCancellation()
         {
             CancellationToken.ThrowIfCancellationRequested();

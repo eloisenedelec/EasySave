@@ -7,11 +7,20 @@ namespace EasySave.Services
     {
         private readonly List<BackupTask> _tasks = new();
 
+        private readonly GlobalPriorityTracker _tracker;
+        private readonly LargeFileCoordinator _coordinator;
+
         public IReadOnlyList<BackupTask> Tasks => _tasks;
+
+        public BackupOrchestrator(GlobalPriorityTracker tracker, LargeFileCoordinator coordinator)
+        {
+            _tracker = tracker;
+            _coordinator = coordinator;
+        }
 
         public BackupTask CreateTask(BackupJob job, IBackupObserver observer)
         {
-            var task = new BackupTask(job, observer);
+            var task = new BackupTask(job, observer, _tracker, _coordinator);
             _tasks.Add(task);
             return task;
         }
