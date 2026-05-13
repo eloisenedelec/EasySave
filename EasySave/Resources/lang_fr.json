@@ -54,5 +54,14 @@
   "settings_extensions": "EXTENSIONS À CHIFFRER",
   "btn_add": "Ajouter",
   "btn_save": "Enregistrer",
-  "btn_open_logs": "📂 Ouvrir les logs"
+  "btn_open_logs": "📂 Ouvrir les logs",
+  "settings_priority_ext": "EXTENSIONS PRIORITAIRES",
+  "settings_large_file_limit": "TAILLE LIMITE GROS FICHIERS",
+
+  "btn_pause_all": "⏸ Pause",
+  "btn_resume_all": "▶ Reprendre",
+  "btn_stop_all": "⏹ Arrêter tout",
+  "tooltip_pause": "Mettre en pause",
+  "tooltip_resume": "Reprendre",
+  "tooltip_stop": "Arrêter"
 }

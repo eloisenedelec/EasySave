@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -13,19 +12,15 @@ namespace EasySave.ViewModels;
 public class MainViewModel : INotifyPropertyChanged, IBackupObserver
 {
     private readonly BackupExecutor _executor;
+    private readonly BackupOrchestrator _orchestrator;
+    private readonly ProcessMonitorService _processMonitor;
 
     private bool _isAddingJob;
     private bool _isSettingsOpen;
     private AddJobViewModel? _addJobVM;
     private SettingsViewModel? _settingsVM;
-
-    private bool _isExecuting;
-    private double _progress;
+    private bool _isAnyRunning;
     private string _statusMessage = string.Empty;
-    private string _currentFile = string.Empty;
-    private string _progressText = string.Empty;
-    private int _totalFiles;
-    private int _filesProcessed;
 
     public ObservableCollection<JobRowViewModel> Jobs { get; } = new();
 
@@ -53,17 +48,10 @@ public class MainViewModel : INotifyPropertyChanged, IBackupObserver
         private set { _settingsVM = value; OnPropertyChanged(); }
     }
 
-    public bool IsExecuting
+    public bool IsAnyRunning
     {
-        get => _isExecuting;
-        private set { _isExecuting = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotExecuting)); }
-    }
-    public bool IsNotExecuting => !_isExecuting;
-
-    public double Progress
-    {
-        get => _progress;
-        private set { _progress = value; OnPropertyChanged(); }
+        get => _isAnyRunning;
+        private set { _isAnyRunning = value; OnPropertyChanged(); }
     }
 
     public string StatusMessage
@@ -72,33 +60,31 @@ public class MainViewModel : INotifyPropertyChanged, IBackupObserver
         private set { _statusMessage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasStatus)); }
     }
 
-    public string CurrentFile
-    {
-        get => _currentFile;
-        private set { _currentFile = value; OnPropertyChanged(); }
-    }
+    public bool HasStatus        => !string.IsNullOrEmpty(_statusMessage);
+    public bool HasSelectedJobs  => Jobs.Any(j => j.IsSelected);
 
-    public string ProgressText
-    {
-        get => _progressText;
-        private set { _progressText = value; OnPropertyChanged(); }
-    }
-
-    public bool HasStatus => !string.IsNullOrEmpty(_statusMessage);
-    public bool HasSelectedJobs => Jobs.Any(j => j.IsSelected);
-
-    public ICommand OpenAddJobCommand { get; }
+    public ICommand OpenAddJobCommand      { get; }
     public ICommand ExecuteSelectedCommand { get; }
-    public ICommand OpenSettingsCommand { get; }
+    public ICommand OpenSettingsCommand    { get; }
+    public ICommand PauseAllCommand        { get; }
+    public ICommand ResumeAllCommand       { get; }
+    public ICommand StopAllCommand         { get; }
 
     public MainViewModel(BackupExecutor executor)
     {
-        _executor = executor;
+        _executor    = executor;
+        _orchestrator = executor.Orchestrator;
         _executor.AddObserver(this);
 
+        _processMonitor = new ProcessMonitorService(_orchestrator);
+        _processMonitor.Start();
+
         OpenAddJobCommand      = new RelayCommand(OpenAddJob);
-        ExecuteSelectedCommand = new RelayCommand(ExecuteSelected, () => HasSelectedJobs && !IsExecuting);
+        ExecuteSelectedCommand = new RelayCommand(ExecuteSelected, () => HasSelectedJobs && !IsAnyRunning);
         OpenSettingsCommand    = new RelayCommand(OpenSettings);
+        PauseAllCommand        = new RelayCommand(() => _orchestrator.PauseAll(),  () => IsAnyRunning);
+        ResumeAllCommand       = new RelayCommand(() => _orchestrator.ResumeAll(), () => IsAnyRunning);
+        StopAllCommand         = new RelayCommand(() => _orchestrator.StopAll(),   () => IsAnyRunning);
 
         LoadJobs();
     }
@@ -130,20 +116,51 @@ public class MainViewModel : INotifyPropertyChanged, IBackupObserver
 
     private async void ExecuteOne(JobRowViewModel row)
     {
-        if (IsExecuting) return;
-        IsExecuting = true;
-        row.IsRunning = true;
-        await Task.Run(() => _executor.ExecuteBackup(row.Job));
-        row.IsRunning = false;
-        IsExecuting = false;
+        await RunJobsAsync(new[] { row });
     }
 
     private async void ExecuteSelected()
     {
-        IsExecuting = true;
-        var ids = Jobs.Where(j => j.IsSelected).Select(j => j.Job.Id).ToList();
-        await Task.Run(() => _executor.ExecuteMultipleBackups(ids));
-        IsExecuting = false;
+        var selected = Jobs.Where(j => j.IsSelected).ToList();
+        await RunJobsAsync(selected);
+    }
+
+    private async Task RunJobsAsync(IEnumerable<JobRowViewModel> rows)
+    {
+        var rowList = rows.ToList();
+        if (rowList.Count == 0) return;
+
+        IsAnyRunning = true;
+        StatusMessage = "Sauvegarde en cours...";
+        _orchestrator.Clear();
+
+        foreach (var row in rowList)
+        {
+            var composite = new CompositeObserver(_executor, row);
+            var task = _orchestrator.CreateTask(row.Job, composite);
+            row.SetTask(task);
+        }
+
+        try
+        {
+            await _orchestrator.RunAllAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Erreur : {ex.Message}";
+        }
+        finally
+        {
+            IsAnyRunning = false;
+            CommandManager.InvalidateRequerySuggested();
+
+            // Résumé basé sur l'état réel des jobs
+            bool anyError = rowList.Any(r => r.State is BackupTaskState.Error or BackupTaskState.Stopped);
+            if (anyError)
+                StatusMessage = "Sauvegarde terminée avec des erreurs — voir les jobs en rouge";
+            else
+                StatusMessage = "Sauvegarde terminée";
+        }
     }
 
     private void OpenAddJob()
@@ -164,48 +181,22 @@ public class MainViewModel : INotifyPropertyChanged, IBackupObserver
         IsSettingsOpen = true;
     }
 
+    // Observer global — reçoit les events de tous les jobs via BackupExecutor
     public void OnBackupStarted(string jobName, int totalFiles, long totalSize)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            _totalFiles = totalFiles;
-            _filesProcessed = 0;
-            Progress = 0;
-            CurrentFile = string.Empty;
-            StatusMessage = jobName;
-            ProgressText = $"0 / {totalFiles}";
-        });
+        Application.Current.Dispatcher.Invoke(() => StatusMessage = $"{jobName} — {totalFiles} fichiers");
     }
 
-    public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
-    {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            _filesProcessed++;
-            CurrentFile = Path.GetFileName(sourceFile);
-            Progress = _totalFiles > 0 ? (double)_filesProcessed / _totalFiles * 100 : 0;
-            ProgressText = $"{_filesProcessed} / {_totalFiles}";
-        });
-    }
+    public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs) { }
 
     public void OnBackupCompleted(string jobName)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            Progress = 100;
-            CurrentFile = string.Empty;
-            ProgressText = string.Empty;
-            StatusMessage = $"{jobName} — terminé";
-        });
+        Application.Current.Dispatcher.Invoke(() => StatusMessage = $"{jobName} — terminé");
     }
 
     public void OnBackupError(string jobName, string error)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            CurrentFile = string.Empty;
-            StatusMessage = $"Erreur : {error}";
-        });
+        Application.Current.Dispatcher.Invoke(() => StatusMessage = $"Erreur [{jobName}] : {error}");
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

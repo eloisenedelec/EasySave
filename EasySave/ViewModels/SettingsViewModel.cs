@@ -26,6 +26,8 @@ public class SettingsViewModel : INotifyPropertyChanged
     private string _selectedLogFormat;
     private string _newProcessName = string.Empty;
     private string _newExtension = string.Empty;
+    private string _newPriorityExtension = string.Empty;
+    private string _largeFileSizeKb = string.Empty;
 
     public List<LanguageOption> Languages { get; } = new()
     {
@@ -63,12 +65,28 @@ public class SettingsViewModel : INotifyPropertyChanged
         set { _newExtension = value; OnPropertyChanged(); }
     }
 
+    public ObservableCollection<string> PriorityExtensions { get; } = new();
+
+    public string NewPriorityExtension
+    {
+        get => _newPriorityExtension;
+        set { _newPriorityExtension = value; OnPropertyChanged(); }
+    }
+
+    public string LargeFileSizeKb
+    {
+        get => _largeFileSizeKb;
+        set { _largeFileSizeKb = value; OnPropertyChanged(); }
+    }
+
     public ICommand SaveCommand { get; }
     public ICommand CloseCommand { get; }
     public ICommand AddProcessCommand { get; }
     public ICommand RemoveProcessCommand { get; }
     public ICommand AddExtensionCommand { get; }
     public ICommand RemoveExtensionCommand { get; }
+    public ICommand AddPriorityExtensionCommand { get; }
+    public ICommand RemovePriorityExtensionCommand { get; }
     public ICommand OpenLogsCommand { get; }
 
     public SettingsViewModel(Action onClose)
@@ -85,13 +103,20 @@ public class SettingsViewModel : INotifyPropertyChanged
         foreach (var e in _settingsManager.GetEncryptedExtensions())
             Extensions.Add(e);
 
-        SaveCommand            = new RelayCommand(Save);
-        CloseCommand           = new RelayCommand(_onClose);
-        AddProcessCommand      = new RelayCommand(AddProcess);
-        RemoveProcessCommand   = new RelayCommand<SettingsProcess>(RemoveProcess);
-        AddExtensionCommand    = new RelayCommand(AddExtension);
-        RemoveExtensionCommand = new RelayCommand<string>(RemoveExtension);
-        OpenLogsCommand        = new RelayCommand(OpenLogs);
+        foreach (var e in _settingsManager.GetPriorityExtensions())
+            PriorityExtensions.Add(e);
+
+        LargeFileSizeKb = (_settingsManager.GetLargeFileSizeLimit() / 1024).ToString();
+
+        SaveCommand                    = new RelayCommand(Save);
+        CloseCommand                   = new RelayCommand(_onClose);
+        AddProcessCommand              = new RelayCommand(AddProcess);
+        RemoveProcessCommand           = new RelayCommand<SettingsProcess>(RemoveProcess);
+        AddExtensionCommand            = new RelayCommand(AddExtension);
+        RemoveExtensionCommand         = new RelayCommand<string>(RemoveExtension);
+        AddPriorityExtensionCommand    = new RelayCommand(AddPriorityExtension);
+        RemovePriorityExtensionCommand = new RelayCommand<string>(RemovePriorityExtension);
+        OpenLogsCommand                = new RelayCommand(OpenLogs);
     }
 
     private void OpenLogs()
@@ -109,6 +134,10 @@ public class SettingsViewModel : INotifyPropertyChanged
         _settingsManager.SetLogFormat(SelectedLogFormat);
         Logger.GetInstance().SetFormat(SelectedLogFormat);
         LanguageManager.GetInstance().LoadLanguage(SelectedLanguage.Code);
+
+        if (long.TryParse(LargeFileSizeKb, out long kb) && kb > 0)
+            _settingsManager.SetLargeFileSizeLimit(kb * 1024);
+
         _onClose();
     }
 
@@ -144,6 +173,23 @@ public class SettingsViewModel : INotifyPropertyChanged
     {
         _settingsManager.RemoveExtension(extension);
         Extensions.Remove(extension);
+    }
+
+    private void AddPriorityExtension()
+    {
+        if (string.IsNullOrWhiteSpace(NewPriorityExtension)) return;
+        var ext = NewPriorityExtension.Trim().ToLower();
+        if (!ext.StartsWith(".")) ext = "." + ext;
+        if (PriorityExtensions.Contains(ext)) return;
+        _settingsManager.AddPriorityExtension(ext);
+        PriorityExtensions.Add(ext);
+        NewPriorityExtension = string.Empty;
+    }
+
+    private void RemovePriorityExtension(string extension)
+    {
+        _settingsManager.RemovePriorityExtension(extension);
+        PriorityExtensions.Remove(extension);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

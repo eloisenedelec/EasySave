@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:EasySave.Views"
         xmlns:ui="clr-namespace:EasySave.UI"
+        xmlns:models="clr-namespace:EasySave.Models"
         Title="EasySave" Height="640" Width="820"
         Icon="/Resources/logo.png"
         MinHeight="480" MinWidth="600"
@@ -32,13 +33,16 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#1B263B"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <!-- btn executer-->
+        <!-- btn executer -->
         <Style x:Key="PrimaryBtn" TargetType="Button">
             <Setter Property="Background" Value="#415A77"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -68,7 +72,7 @@
             </Setter>
         </Style>
 
-        <!-- btn ligne supr ou run -->
+        <!-- btn ligne action -->
         <Style x:Key="RowActionBtn" TargetType="Button">
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="30"/>
@@ -110,22 +114,50 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- barre de progress job (verte quand terminé) -->
+        <Style x:Key="JobProgressBarStyle" TargetType="ProgressBar" BasedOn="{StaticResource ProgressBarStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Completed}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ProgressBar">
+                                <Border x:Name="PART_Track" Background="#D0D3D8" CornerRadius="2" ClipToBounds="True">
+                                    <Border x:Name="PART_Indicator" Background="#4CAF50" CornerRadius="2" HorizontalAlignment="Left"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Error}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ProgressBar">
+                                <Border x:Name="PART_Track" Background="#D0D3D8" CornerRadius="2" ClipToBounds="True">
+                                    <Border x:Name="PART_Indicator" Background="#E53935" CornerRadius="2" HorizontalAlignment="Left"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-    <!-- grid qui superpose contenu + overlays -->
     <Grid>
 
         <!-- contenu principal -->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="54"/>   <!-- TopBar -->
-                <RowDefinition Height="*"/>    <!-- Corps -->
-                <RowDefinition Height="Auto"/> <!-- StatusBar -->
+                <RowDefinition Height="54"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- ── topbar ── -->
             <Border Grid.Row="0" Background="#415A77">
                 <Grid Margin="20,0">
+                    <!-- titre -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="EasySave"
                                    FontSize="16" FontWeight="Bold"
@@ -136,10 +168,33 @@
                                    VerticalAlignment="Bottom"
                                    Padding="0,0,0,1"/>
                     </StackPanel>
-                    <Button Content="{Binding [btn_settings], Source={x:Static ui:LanguageManager.Instance}}"
-                            Style="{StaticResource TopBarBtn}"
-                            Command="{Binding OpenSettingsCommand}"
-                            HorizontalAlignment="Right"/>
+
+                    <!-- boutons globaux + settings -->
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+
+                        <!-- contrôles globaux (visibles seulement si un job tourne) -->
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding IsAnyRunning, Converter={StaticResource BoolToVis}}"
+                                    Margin="0,0,8,0">
+                            <Button Content="{Binding [btn_pause_all], Source={x:Static ui:LanguageManager.Instance}}"
+                                    Style="{StaticResource TopBarBtn}"
+                                    Command="{Binding PauseAllCommand}"
+                                    Margin="0,0,4,0"/>
+                            <Button Content="{Binding [btn_resume_all], Source={x:Static ui:LanguageManager.Instance}}"
+                                    Style="{StaticResource TopBarBtn}"
+                                    Command="{Binding ResumeAllCommand}"
+                                    Margin="0,0,4,0"/>
+                            <Button Content="{Binding [btn_stop_all], Source={x:Static ui:LanguageManager.Instance}}"
+                                    Style="{StaticResource TopBarBtn}"
+                                    Command="{Binding StopAllCommand}"/>
+                        </StackPanel>
+
+                        <Button Content="{Binding [btn_settings], Source={x:Static ui:LanguageManager.Instance}}"
+                                Style="{StaticResource TopBarBtn}"
+                                Command="{Binding OpenSettingsCommand}"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -162,80 +217,149 @@
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Running}">
                                                     <Setter Property="BorderBrush" Value="#415A77"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Paused}">
+                                                    <Setter Property="BorderBrush" Value="#F9A825"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Completed}">
+                                                    <Setter Property="BorderBrush" Value="#4CAF50"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding State}" Value="{x:Static models:BackupTaskState.Error}">
+                                                    <Setter Property="BorderBrush" Value="#E53935"/>
                                                     <Setter Property="BorderThickness" Value="2"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
 
-                                        <!-- checkbox sélection -->
-                                        <CheckBox Grid.Column="0"
-                                                  IsChecked="{Binding IsSelected}"
-                                                  VerticalAlignment="Center"
-                                                  Margin="0,0,14,0"/>
+                                    <StackPanel>
+                                        <!-- ligne principale : checkbox / badge / nom / boutons -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <!-- badge type -->
-                                        <Border Grid.Column="1"
-                                                Background="#EEF2F7"
-                                                CornerRadius="4"
-                                                Padding="8,3"
-                                                Margin="0,0,14,0"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Job.Type}"
-                                                       Foreground="#415A77"
-                                                       FontSize="11"
-                                                       FontWeight="SemiBold"/>
-                                        </Border>
+                                            <!-- checkbox -->
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsSelected}"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,14,0"/>
 
-                                        <!-- nom + chemins -->
-                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Job.Name}"
-                                                       FontSize="14" FontWeight="SemiBold"
-                                                       Foreground="#1B263B"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                <TextBlock Text="{Binding Job.SourcePath}"
-                                                           FontSize="11" Foreground="#778DA9"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           MaxWidth="220"/>
-                                                <TextBlock Text=" → "
-                                                           FontSize="11" Foreground="#415A77"
+                                            <!-- badge type -->
+                                            <Border Grid.Column="1"
+                                                    Background="#EEF2F7"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    Margin="0,0,14,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Job.Type}"
+                                                           Foreground="#415A77"
+                                                           FontSize="11"
                                                            FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Job.TargetPath}"
-                                                           FontSize="11" Foreground="#778DA9"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           MaxWidth="220"/>
-                                            </StackPanel>
-                                        </StackPanel>
+                                            </Border>
 
-                                        <!-- run ou delete -->
-                                        <StackPanel Grid.Column="3"
-                                                    Orientation="Horizontal"
-                                                    VerticalAlignment="Center"
-                                                    Margin="12,0,0,0">
-                                            <Button Background="#EEF2F7"
-                                                    Foreground="#415A77"
-                                                    Content="▶"
-                                                    Style="{StaticResource RowActionBtn}"
-                                                    ToolTip="{Binding [tooltip_execute_job], Source={x:Static ui:LanguageManager.Instance}}"
-                                                    Command="{Binding ExecuteOneCommand}"
-                                                    Margin="0,0,6,0"/>
-                                            <Button Background="#FDECEA"
-                                                    Foreground="#C0392B"
-                                                    Content="✕"
-                                                    Style="{StaticResource RowActionBtn}"
-                                                    ToolTip="{Binding [tooltip_delete_job], Source={x:Static ui:LanguageManager.Instance}}"
-                                                    Command="{Binding DeleteCommand}"/>
-                                        </StackPanel>
-                                    </Grid>
+                                            <!-- nom + chemins -->
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Job.Name}"
+                                                           FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="#1B263B"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <TextBlock Text="{Binding Job.SourcePath}"
+                                                               FontSize="11" Foreground="#778DA9"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxWidth="200"/>
+                                                    <TextBlock Text=" → "
+                                                               FontSize="11" Foreground="#415A77"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Job.TargetPath}"
+                                                               FontSize="11" Foreground="#778DA9"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxWidth="200"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- boutons colonne droite -->
+                                            <StackPanel Grid.Column="3"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        Margin="12,0,0,0">
+
+                                                <!-- boutons inactif : Run + Delete -->
+                                                <StackPanel Orientation="Horizontal"
+                                                            Visibility="{Binding ShowIdleButtons, Converter={StaticResource BoolToVis}}">
+                                                    <Button Background="#EEF2F7"
+                                                            Foreground="#415A77"
+                                                            Content="▶"
+                                                            Style="{StaticResource RowActionBtn}"
+                                                            ToolTip="{Binding [tooltip_execute_job], Source={x:Static ui:LanguageManager.Instance}}"
+                                                            Command="{Binding ExecuteOneCommand}"
+                                                            Margin="0,0,6,0"/>
+                                                    <Button Background="#FDECEA"
+                                                            Foreground="#C0392B"
+                                                            Content="✕"
+                                                            Style="{StaticResource RowActionBtn}"
+                                                            ToolTip="{Binding [tooltip_delete_job], Source={x:Static ui:LanguageManager.Instance}}"
+                                                            Command="{Binding DeleteCommand}"/>
+                                                </StackPanel>
+
+                                                <!-- bouton pause (Running) -->
+                                                <Button Background="#FFF8E1"
+                                                        Foreground="#F9A825"
+                                                        Content="⏸"
+                                                        Style="{StaticResource RowActionBtn}"
+                                                        ToolTip="{Binding [tooltip_pause], Source={x:Static ui:LanguageManager.Instance}}"
+                                                        Command="{Binding PauseCommand}"
+                                                        Margin="0,0,6,0"
+                                                        Visibility="{Binding ShowPauseButton, Converter={StaticResource BoolToVis}}"/>
+
+                                                <!-- bouton resume (Paused) -->
+                                                <Button Background="#E8F5E9"
+                                                        Foreground="#43A047"
+                                                        Content="▶"
+                                                        Style="{StaticResource RowActionBtn}"
+                                                        ToolTip="{Binding [tooltip_resume], Source={x:Static ui:LanguageManager.Instance}}"
+                                                        Command="{Binding ResumeCommand}"
+                                                        Margin="0,0,6,0"
+                                                        Visibility="{Binding ShowResumeButton, Converter={StaticResource BoolToVis}}"/>
+
+                                                <!-- bouton stop (Running ou Paused) -->
+                                                <Button Background="#FDECEA"
+                                                        Foreground="#C0392B"
+                                                        Content="⏹"
+                                                        Style="{StaticResource RowActionBtn}"
+                                                        ToolTip="{Binding [tooltip_stop], Source={x:Static ui:LanguageManager.Instance}}"
+                                                        Command="{Binding StopCommand}"
+                                                        Visibility="{Binding ShowStopButton, Converter={StaticResource BoolToVis}}"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- barre de progression (visible dès qu'un job a démarré) -->
+                                        <Grid Margin="0,10,0,0"
+                                              Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ProgressBar Grid.Column="0"
+                                                         Value="{Binding Progress, Mode=OneWay}"
+                                                         Minimum="0" Maximum="100"
+                                                         Style="{StaticResource JobProgressBarStyle}"
+                                                         VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding ProgressText}"
+                                                       FontSize="11" Foreground="#778DA9"
+                                                       Margin="10,0,0,0"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -270,7 +394,7 @@
                         </Button.Template>
                     </Button>
 
-                    <!-- btn run la selection-->
+                    <!-- btn run la sélection -->
                     <Button Content="{Binding [btn_execute_selected], Source={x:Static ui:LanguageManager.Instance}}"
                             Style="{StaticResource PrimaryBtn}"
                             Command="{Binding ExecuteSelectedCommand}"
@@ -281,47 +405,24 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- ── bar status ── -->
+            <!-- ── status bar ── -->
             <Border Grid.Row="2"
                     Background="#1B263B"
                     Padding="24,12"
                     Visibility="{Binding HasStatus, Converter={StaticResource BoolToVis}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   FontSize="12" FontWeight="SemiBold"
-                                   Foreground="#E0E1DD"/>
-                        <TextBlock Text="{Binding CurrentFile}"
-                                   FontSize="11" Foreground="#778DA9"
-                                   Margin="0,3,0,6"
-                                   Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"
-                                   TextTrimming="CharacterEllipsis"/>
-                        <ProgressBar Value="{Binding Progress, Mode=OneWay}"
-                                     Minimum="0" Maximum="100"
-                                     Style="{StaticResource ProgressBarStyle}"
-                                     Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding ProgressText}"
-                               FontSize="12" Foreground="#778DA9"
-                               VerticalAlignment="Center"
-                               Margin="16,0,0,0"
-                               Visibility="{Binding IsExecuting, Converter={StaticResource BoolToVis}}"/>
-                </Grid>
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="#E0E1DD"/>
             </Border>
         </Grid>
 
-        <!-- overlay ajt de job -->
+        <!-- overlay ajout de job -->
         <Grid Background="#88000000"
               Visibility="{Binding IsAddingJob, Converter={StaticResource BoolToVis}}">
             <views:AddJobOverlay DataContext="{Binding AddJobVM}"/>
         </Grid>
 
-        <!-- overlay params -->
+        <!-- overlay paramètres -->
         <Grid Background="#88000000"
               Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
             <views:SettingsOverlay DataContext="{Binding SettingsVM}"/>

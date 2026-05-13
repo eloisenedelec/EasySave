@@ -54,5 +54,14 @@
   "settings_extensions": "ENCRYPTED EXTENSIONS",
   "btn_add": "Add",
   "btn_save": "Save",
-  "btn_open_logs": "📂 Open logs"
+  "btn_open_logs": "📂 Open logs",
+  "settings_priority_ext": "PRIORITY EXTENSIONS",
+  "settings_large_file_limit": "LARGE FILE SIZE LIMIT",
+
+  "btn_pause_all": "⏸ Pause",
+  "btn_resume_all": "▶ Resume",
+  "btn_stop_all": "⏹ Stop all",
+  "tooltip_pause": "Pause",
+  "tooltip_resume": "Resume",
+  "tooltip_stop": "Stop"
 }
