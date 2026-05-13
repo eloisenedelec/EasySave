@@ -2,6 +2,9 @@ using System;
 using System.IO;
 using EasySave.Observers;
 using EasyLog.Repositories;
+using System.Net.Http.Json;
+using EasyLog.Contracts;
+
 
 namespace EasyLog
 {
@@ -9,8 +12,15 @@ namespace EasyLog
     {
         private static Logger? _instance;
         private static readonly object _lock = new object();
+        private static readonly HttpClient _httpClient = new HttpClient();
         private string? _currentJobName;
         private ILogRepository _repository;
+        private ILogSettings _settings;
+
+        public void Initialize(ILogSettings settings)
+        {
+            _settings = settings;
+        }
 
         private Logger()
         {
@@ -59,15 +69,56 @@ namespace EasyLog
 
         public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
         {
-            _repository.Append(new LogEntry
+            // 1. On prépare l'entrée de log (avec les nouveaux champs Machine/User)
+            var entry = new LogEntry
             {
                 Timestamp = DateTime.Now,
                 JobName = _currentJobName,
                 SourceFile = sourceFile,
                 TargetFile = targetFile,
                 FileSize = fileSize,
-                TransferTimeMs = transferTime
-            });
+                TransferTimeMs = transferTime,
+                EncryptionTimeMs = encryptionTimeMs,
+                MachineName = Environment.MachineName, // Automatique via ton constructeur LogEntry
+                UserName = Environment.UserName        // Automatique via ton constructeur LogEntry
+            };
+
+            if (_settings != null)
+            {
+                LogMode mode = _settings.GetLogMode();
+                // TEST 1 : Est-ce qu'on entre ici ?
+                // MessageBox.Show($"Mode détecté : {mode}"); 
+
+                if (mode == LogMode.Centralized || mode == LogMode.Both)
+                {
+                    // TEST 2 : Quelle URL on utilise ?
+                    // MessageBox.Show($"URL : {_settings.GetLogServerUrl()}");
+                    SendToDocker(_settings.GetLogServerUrl(), entry);
+                }
+            }
+        }
+
+        private async void SendToDocker(string url, LogEntry entry)
+        {
+            try
+            {
+                Console.WriteLine($"Tentative d'envoi vers : {url.TrimEnd('/')}/api/log");
+                var response = await _httpClient.PostAsJsonAsync($"{url.TrimEnd('/')}/api/log", entry);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Log envoyé avec succès !");
+                }
+                else
+                {
+                    Console.WriteLine($"Échec du serveur : {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // ICI : On affiche enfin l'erreur dans ta console de debug
+                Console.WriteLine($"ERREUR HTTP : {ex.Message}");
+            }
         }
 
         public void OnBackupCompleted(string jobName) { }

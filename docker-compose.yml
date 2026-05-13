@@ -1,0 +1,9 @@
+﻿services:
+  log-server:
+    build:
+      context: .
+      dockerfile: LogCentralizationService/Dockerfile
+    ports:
+      - "5000:8080"
+    volumes:
+      - ./logs_data:/app/logs

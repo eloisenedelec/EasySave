@@ -1,5 +1,8 @@
 using EasySave.Models;
 using EasySave.Observers;
+using EasySave.Strategies;
+using EasyLog.Contracts;
+using System.IO;
 
 namespace EasySave.Services
 {
@@ -7,6 +10,13 @@ namespace EasySave.Services
     {
         private readonly List<IBackupObserver> _observers = new();
         private readonly BackupOrchestrator _orchestrator = new();
+        private readonly CryptoSoftManager _cryptoManager = new();
+
+        public BackupExecutor()
+        {
+            _observers = new List<IBackupObserver>();
+        }
+
 
         public void AddObserver(IBackupObserver observer)
         {
@@ -104,5 +114,7 @@ namespace EasySave.Services
         {
             _observers.ForEach(o => o.OnBackupError(jobName, error));
         }
+
+
     }
 }

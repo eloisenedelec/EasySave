@@ -12,6 +12,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         Executor = new BackupExecutor();
+        Logger.GetInstance().Initialize(SettingsManager.GetInstance());
 
         var logger = Logger.GetInstance();
         logger.SetFormat(SettingsManager.GetInstance().GetLogFormat());

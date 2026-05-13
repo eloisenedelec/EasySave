@@ -1,5 +1,4 @@
 using System.IO;
-using EasySave.Observers;
 using EasySave.Models;
 using EasySave.Services;
 
@@ -7,7 +6,7 @@ namespace EasySave.Strategies
 {
     public class FullBackupStrategy : IBackupStrategy
     {
-        private readonly EncryptionService _encryption = new();
+        // On supprime l'ancien EncryptionService car on utilise désormais CryptoSoft via l'executor
 
         public void Execute(BackupJob job, BackupExecutionContext context) {
             string sourcePath = job.SourcePath;
@@ -15,7 +14,6 @@ namespace EasySave.Strategies
 
             var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
             long totalSize = files.Sum(f => new FileInfo(f).Length);
-            var encryptedExtensions = SettingsManager.GetInstance().GetEncryptedExtensions();
 
             context.Observer.OnBackupStarted(job.Name, files.Length, totalSize);
             try
@@ -30,15 +28,13 @@ namespace EasySave.Strategies
 
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
 
-                    var fileSize = new FileInfo(file).Length;
-                    long encryptionTime = 0;
-
                     var startTime = DateTime.Now;
-                    if (encryptedExtensions.Contains(Path.GetExtension(file).ToLower()))
-                        encryptionTime = _encryption.EncryptFile(file, targetFile);
-                    else
-                        File.Copy(file, targetFile, true);
+
+                    // CENTRALISATION : C'est l'executor qui gère le Mutex et le chiffrement
+                    executor.ProcessFileCopy(file, targetFile);
+
                     var transferTime = (DateTime.Now - startTime).Ticks;
+                    var fileSize = new FileInfo(file).Length;
 
                     context.Observer.OnFileProcessed(file, targetFile, fileSize, transferTime, encryptionTime);
                 }
@@ -47,7 +43,7 @@ namespace EasySave.Strategies
             
             catch (OperationCanceledException)
             {
-                context.Observer.OnBackupError(job.Name, "Sauvegarde annulée");
+                context.Observer.OnBackupError(job.Name, "Sauvegarde annulÃ©e");
             }
             catch (Exception ex)
             {

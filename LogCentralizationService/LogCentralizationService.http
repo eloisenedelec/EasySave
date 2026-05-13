@@ -1,0 +1,6 @@
+@LogCentralizationService_HostAddress = http://localhost:5174
+
+GET {{LogCentralizationService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
