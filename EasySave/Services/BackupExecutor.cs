@@ -3,20 +3,25 @@ using EasySave.Observers;
 using EasySave.Strategies;
 using EasyLog.Contracts;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System;
+using System.Threading.Tasks;
 
 namespace EasySave.Services
 {
     public class BackupExecutor : IBackupObserver
     {
         private readonly List<IBackupObserver> _observers = new();
-        private readonly BackupOrchestrator _orchestrator = new();
+        private readonly BackupOrchestrator _orchestrator;
         private readonly CryptoSoftManager _cryptoManager = new();
 
-        public BackupExecutor()
+        // Correction : Accepte l'orchestrateur en paramètre pour résoudre CS7036
+        public BackupExecutor(BackupOrchestrator? orchestrator = null)
         {
             _observers = new List<IBackupObserver>();
+            _orchestrator = orchestrator ?? new BackupOrchestrator(GlobalPriorityTracker.Instance, new LargeFileCoordinator());
         }
-
 
         public void AddObserver(IBackupObserver observer)
         {
@@ -114,7 +119,5 @@ namespace EasySave.Services
         {
             _observers.ForEach(o => o.OnBackupError(jobName, error));
         }
-
-
     }
 }

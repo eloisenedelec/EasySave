@@ -1,5 +1,6 @@
 using EasySave.Models;
 using EasySave.Observers;
+using System.Collections.Generic;
 
 namespace EasySave.Services
 {
@@ -9,8 +10,11 @@ namespace EasySave.Services
         private readonly BackupOrchestrator _backupOrchestrator;
 
         public BackupControlService()
-            : this(new BackupExecutor(), new BackupOrchestrator(GlobalPriorityTracker.Instance, LargeFileCoordinator.Instance))
         {
+            // Correction : On instancie les nouveaux composants correctement
+            _backupOrchestrator = new BackupOrchestrator(GlobalPriorityTracker.Instance, new LargeFileCoordinator());
+            // On partage l'orchestrateur avec l'Executor
+            _backupExecutor = new BackupExecutor(_backupOrchestrator);
         }
 
         public BackupControlService(BackupExecutor backupExecutor, BackupOrchestrator backupOrchestrator)
