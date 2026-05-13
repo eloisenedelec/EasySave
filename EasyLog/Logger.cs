@@ -15,7 +15,7 @@ namespace EasyLog
         private static readonly HttpClient _httpClient = new HttpClient();
         private string? _currentJobName;
         private ILogRepository _repository;
-        private ILogSettings _settings;
+        private ILogSettings? _settings;
 
         public void Initialize(ILogSettings settings)
         {
@@ -69,55 +69,39 @@ namespace EasyLog
 
         public void OnFileProcessed(string sourceFile, string targetFile, long fileSize, long transferTime, long encryptionTimeMs)
         {
-            // 1. On prépare l'entrée de log (avec les nouveaux champs Machine/User)
             var entry = new LogEntry
             {
                 Timestamp = DateTime.Now,
-                JobName = _currentJobName,
+                JobName = _currentJobName ?? string.Empty,
                 SourceFile = sourceFile,
                 TargetFile = targetFile,
                 FileSize = fileSize,
                 TransferTimeMs = transferTime,
                 EncryptionTimeMs = encryptionTimeMs,
-                MachineName = Environment.MachineName, // Automatique via ton constructeur LogEntry
-                UserName = Environment.UserName        // Automatique via ton constructeur LogEntry
+                MachineName = Environment.MachineName,
+                UserName = Environment.UserName
             };
 
-            if (_settings != null)
-            {
-                LogMode mode = _settings.GetLogMode();
-                // TEST 1 : Est-ce qu'on entre ici ?
-                // MessageBox.Show($"Mode détecté : {mode}"); 
+            LogMode mode = _settings?.GetLogMode() ?? LogMode.Local;
 
-                if (mode == LogMode.Centralized || mode == LogMode.Both)
-                {
-                    // TEST 2 : Quelle URL on utilise ?
-                    // MessageBox.Show($"URL : {_settings.GetLogServerUrl()}");
-                    SendToDocker(_settings.GetLogServerUrl(), entry);
-                }
-            }
+            if (mode == LogMode.Local || mode == LogMode.Both)
+                _repository.Append(entry);
+
+            if (mode == LogMode.Centralized || mode == LogMode.Both)
+                _ = SendToDockerAsync(_settings!.GetLogServerUrl(), entry);
         }
 
-        private async void SendToDocker(string url, LogEntry entry)
+        private async Task SendToDockerAsync(string url, LogEntry entry)
         {
             try
             {
-                Console.WriteLine($"Tentative d'envoi vers : {url.TrimEnd('/')}/api/log");
                 var response = await _httpClient.PostAsJsonAsync($"{url.TrimEnd('/')}/api/log", entry);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("Log envoyé avec succès !");
-                }
-                else
-                {
-                    Console.WriteLine($"Échec du serveur : {response.StatusCode}");
-                }
+                if (!response.IsSuccessStatusCode)
+                    Console.WriteLine($"Echec envoi log Docker : {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                // ICI : On affiche enfin l'erreur dans ta console de debug
-                Console.WriteLine($"ERREUR HTTP : {ex.Message}");
+                Console.WriteLine($"Erreur HTTP log Docker : {ex.Message}");
             }
         }
 

@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace LogCentralizationService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/log")]
     public class LogController : ControllerBase
     {
         private static readonly object _fileLock = new object();

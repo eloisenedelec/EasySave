@@ -38,7 +38,7 @@ namespace EasySave.Services
         {
             var runningTasks = _tasks
                 .Where(task => task.State == BackupTaskState.Idle)
-                .Select(task => Task.Run(() => task.RunAsync()))
+                .Select(task => task.RunAsync())
                 .ToList();
 
             await Task.WhenAll(runningTasks);
@@ -48,7 +48,7 @@ namespace EasySave.Services
         {
             var runningTasks = selectedTasks
                 .Where(task => task.State == BackupTaskState.Idle)
-                .Select(task => Task.Run(() => task.RunAsync()))
+                .Select(task => task.RunAsync())
                 .ToList();
 
             await Task.WhenAll(runningTasks);
