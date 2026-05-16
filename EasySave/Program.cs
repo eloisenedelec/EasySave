@@ -63,13 +63,11 @@ namespace EasySave
                         !parsed.TryGetValue("source", out var source) ||
                         !parsed.TryGetValue("target", out var target))
                     {
-                        Console.WriteLine("Usage: EasySave.exe create --name <nom> --source <chemin> --target <chemin> [--type full|differential]");
+                        Console.WriteLine("Usage: EasySave.exe create --name <nom> --source <chemin> --target <chemin>");
                         break;
                     }
-                    parsed.TryGetValue("type", out var typeStr);
-                    var type = typeStr?.ToLower() == "differential" ? BackupType.Differential : BackupType.Full;
                     int newId = manager.GetJobCount() + 1;
-                    var newJob = new BackupJob(newId, name, source, target, type);
+                    var newJob = new BackupJob(newId, name, source, target, BackupType.Full);
                     if (manager.AddBackupJob(newJob))
                         Console.WriteLine($"Job '{name}' créé avec l'ID {newId} (type: {type}).");
                     else
@@ -94,7 +92,7 @@ namespace EasySave
                     Console.WriteLine("  EasySave.exe list");
                     Console.WriteLine("  EasySave.exe execute all");
                     Console.WriteLine("  EasySave.exe execute <id1,id2,...>");
-                    Console.WriteLine("  EasySave.exe create --name <nom> --source <chemin> --target <chemin> [--type full|differential]");
+                    Console.WriteLine("  EasySave.exe create --name <nom> --source <chemin> --target <chemin>");
                     Console.WriteLine("  EasySave.exe delete <id>");
                     break;
             }

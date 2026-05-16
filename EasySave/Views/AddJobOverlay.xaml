@@ -166,16 +166,6 @@
                         Command="{Binding BrowseTargetCommand}"/>
             </Grid>
 
-            <!-- type de copie -->
-            <TextBlock Text="{Binding [addjob_type], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource FieldLabel}"/>
-            <ComboBox ItemsSource="{Binding BackupTypes}"
-                      SelectedItem="{Binding SelectedType}"
-                      Margin="0,0,0,20"
-                      Padding="10,8"
-                      FontSize="13"
-                      Background="#F8F9FA"
-                      BorderBrush="#D0D7DE"/>
-
             <!-- affichage d'erreur -->
             <Border Background="#FFF0F0"
                     BorderBrush="#FFCCCC"
