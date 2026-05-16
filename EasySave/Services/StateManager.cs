@@ -11,6 +11,7 @@ namespace EasySave.Services
     {
         private static StateManager? _instance;
         private static readonly object _lock = new object();
+        private readonly object _fileLock = new object();
 
         private readonly string _stateFilePath;
         private Dictionary<string, BackupState> _states;
@@ -122,13 +123,16 @@ namespace EasySave.Services
 
         private void SaveToFile()
         {
-            try
+            lock (_fileLock)
             {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(_states, options);
-                File.WriteAllText(_stateFilePath, json);
+                try
+                {
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    string json = JsonSerializer.Serialize(_states, options);
+                    File.WriteAllText(_stateFilePath, json);
+                }
+                catch { }
             }
-            catch { }
         }
     }
 }
