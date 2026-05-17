@@ -28,4 +28,11 @@
     <Resource Include="Resources\logo.png"/>
   </ItemGroup>
 
+  <Target Name="CopyCryptoSoft" AfterTargets="Build">
+    <PropertyGroup>
+      <CryptoSoftOut>$(OutputPath.TrimEnd('\'))</CryptoSoftOut>
+    </PropertyGroup>
+    <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\CryptoSoft\CryptoSoft.csproj&quot; -c $(Configuration) -o &quot;$(CryptoSoftOut)&quot;" />
+  </Target>
+
 </Project>

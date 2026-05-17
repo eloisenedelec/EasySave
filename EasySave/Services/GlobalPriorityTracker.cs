@@ -62,8 +62,7 @@ namespace EasySave.Services
             }
         }
 
-        // 4. Pour tes Tests Unitaires (nettoie le Singleton)
-        public void ResetForTests()
+        public void Reset()
         {
             lock (_lock)
             {
@@ -71,5 +70,8 @@ namespace EasySave.Services
                 _priorityWaitHandle.Set();
             }
         }
+
+        // Pour les tests unitaires
+        public void ResetForTests() => Reset();
     }
 }

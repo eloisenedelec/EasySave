@@ -2,6 +2,7 @@ namespace EasySave.Models
 {
     public enum BackupType
     {
-        Full
+        Full,
+        Differential
     }
 }

@@ -1,12 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using EasySave.Models;
 using EasySave.Services;
 using EasySave.UI;
 using EasyLog;
+using EasyLog.Contracts;
 
 namespace EasySave.ViewModels;
 
@@ -17,6 +19,13 @@ public class LanguageOption
     public LanguageOption(string code, string label) { Code = code; Label = label; }
 }
 
+public class LogModeOption
+{
+    public LogMode Value { get; }
+    public string Label { get; }
+    public LogModeOption(LogMode value, string label) { Value = value; Label = label; }
+}
+
 public class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly Action _onClose;
@@ -24,6 +33,8 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     private LanguageOption _selectedLanguage;
     private string _selectedLogFormat;
+    private LogModeOption _selectedLogMode;
+    private string _logServerUrl = string.Empty;
     private string _newProcessName = string.Empty;
     private string _newExtension = string.Empty;
     private string _newPriorityExtension = string.Empty;
@@ -47,6 +58,32 @@ public class SettingsViewModel : INotifyPropertyChanged
     {
         get => _selectedLogFormat;
         set { _selectedLogFormat = value; OnPropertyChanged(); }
+    }
+
+    public List<LogModeOption> LogModes { get; } = new()
+    {
+        new(LogMode.Local,       "Local"),
+        new(LogMode.Centralized, "Centralized"),
+        new(LogMode.Both,        "Local + Centralized"),
+    };
+
+    public LogModeOption SelectedLogMode
+    {
+        get => _selectedLogMode;
+        set
+        {
+            _selectedLogMode = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowServerUrl));
+        }
+    }
+
+    public bool ShowServerUrl => _selectedLogMode?.Value != LogMode.Local;
+
+    public string LogServerUrl
+    {
+        get => _logServerUrl;
+        set { _logServerUrl = value; OnPropertyChanged(); }
     }
 
     public ObservableCollection<SettingsProcess> Processes { get; } = new();
@@ -94,8 +131,13 @@ public class SettingsViewModel : INotifyPropertyChanged
         _onClose = onClose;
         _settingsManager = SettingsManager.GetInstance();
 
-        _selectedLanguage = Languages[0];
+        var savedLang = _settingsManager.GetLanguage();
+        _selectedLanguage = Languages.FirstOrDefault(l => l.Code == savedLang) ?? Languages[0];
         _selectedLogFormat = _settingsManager.GetLogFormat();
+
+        var currentMode = _settingsManager.GetLogMode();
+        _selectedLogMode = LogModes.First(m => m.Value == currentMode);
+        _logServerUrl = _settingsManager.GetLogServerUrl();
 
         foreach (var p in _settingsManager.GetAllProcesses())
             Processes.Add(p);
@@ -133,7 +175,12 @@ public class SettingsViewModel : INotifyPropertyChanged
     {
         _settingsManager.SetLogFormat(SelectedLogFormat);
         Logger.GetInstance().SetFormat(SelectedLogFormat);
+        _settingsManager.SetLanguage(SelectedLanguage.Code);
         LanguageManager.GetInstance().LoadLanguage(SelectedLanguage.Code);
+
+        _settingsManager.SetLogMode(SelectedLogMode.Value);
+        if (!string.IsNullOrWhiteSpace(LogServerUrl))
+            _settingsManager.SetLogServerUrl(LogServerUrl.Trim());
 
         if (long.TryParse(LargeFileSizeKb, out long kb) && kb > 0)
             _settingsManager.SetLargeFileSizeLimit(kb * 1024);

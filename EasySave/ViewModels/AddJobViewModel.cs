@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -15,6 +16,7 @@ public class AddJobViewModel : INotifyPropertyChanged
     private string _name = string.Empty;
     private string _sourcePath = string.Empty;
     private string _targetPath = string.Empty;
+    private BackupType _selectedType = BackupType.Full;
     private string? _errorMessage;
 
     public string Name
@@ -34,6 +36,14 @@ public class AddJobViewModel : INotifyPropertyChanged
         get => _targetPath;
         set { _targetPath = value; OnPropertyChanged(); }
     }
+
+    public BackupType SelectedType
+    {
+        get => _selectedType;
+        set { _selectedType = value; OnPropertyChanged(); }
+    }
+
+    public IEnumerable<BackupType> BackupTypes => Enum.GetValues<BackupType>();
 
     public string? ErrorMessage
     {
@@ -66,7 +76,7 @@ public class AddJobViewModel : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(TargetPath)) { ErrorMessage = "Le dossier destination est requis."; return; }
 
         var manager = BackupManager.GetInstance();
-        var job = new BackupJob(manager.GetJobCount() + 1, Name, SourcePath, TargetPath, BackupType.Full);
+        var job = new BackupJob(manager.GetJobCount() + 1, Name, SourcePath, TargetPath, SelectedType);
 
         if (!manager.AddBackupJob(job)) { ErrorMessage = "Impossible d'ajouter le job."; return; }
 

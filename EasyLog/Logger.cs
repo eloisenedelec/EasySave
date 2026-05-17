@@ -1,9 +1,11 @@
 using System;
 using System.IO;
-using EasySave.Observers;
-using EasyLog.Repositories;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
+using EasySave.Observers;
 using EasyLog.Contracts;
+using EasyLog.Repositories;
 
 
 namespace EasyLog
@@ -95,14 +97,9 @@ namespace EasyLog
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{url.TrimEnd('/')}/api/log", entry);
-                if (!response.IsSuccessStatusCode)
-                    Console.WriteLine($"Echec envoi log Docker : {response.StatusCode}");
+                await _httpClient.PostAsJsonAsync($"{url.TrimEnd('/')}/api/log", entry);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur HTTP log Docker : {ex.Message}");
-            }
+            catch { }
         }
 
         public void OnBackupCompleted(string jobName) { }

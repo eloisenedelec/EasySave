@@ -7,9 +7,19 @@ using EasySave.Services;
 
 namespace EasySave.Strategies
 {
-    public class FullBackupStrategy : IBackupStrategy
+    public class DiffBackupStrategy : IBackupStrategy
     {
-        // On remet BackupExecutionContext ici !
+        private bool IsFileModified(string sourceFile, string sourceRoot, string lastBackupRoot)
+        {
+            var relative = Path.GetRelativePath(sourceRoot, sourceFile);
+            var backupFile = Path.Combine(lastBackupRoot, relative);
+
+            if (!File.Exists(backupFile))
+                return true;
+
+            return new FileInfo(sourceFile).LastWriteTime > new FileInfo(backupFile).LastWriteTime;
+        }
+
         public void Execute(BackupJob job, BackupExecutionContext context)
         {
             string sourcePath = job.SourcePath;
@@ -20,26 +30,28 @@ namespace EasySave.Strategies
             var prioExtensions = settings.GetPriorityExtensions();
 
             // Prioritaires en premier pour éviter le deadlock interne au job
-            var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+            var modifiedFiles = Directory
+                .GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+                .Where(f => IsFileModified(f, sourcePath, targetPath))
                 .OrderByDescending(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()))
-                .ToArray();
+                .ToList();
 
-            long totalSize = files.Sum(f => new FileInfo(f).Length);
-            int prioCount = files.Count(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()));
+            long totalSize = modifiedFiles.Sum(f => new FileInfo(f).Length);
+            int prioCount = modifiedFiles.Count(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()));
             context.PriorityTracker.RegisterJobPriorityFiles(job.Id, prioCount);
 
-            context.Observer.OnBackupStarted(job.Name, files.Length, totalSize);
+            context.Observer.OnBackupStarted(job.Name, modifiedFiles.Count, totalSize);
 
             var cryptoManager = new CryptoSoftManager();
             long largeFileLimit = settings.GetLargeFileSizeLimit();
 
             try
             {
-                foreach (var file in files)
+                foreach (var sourceFile in modifiedFiles)
                 {
                     context.CheckPauseAndCancellation();
 
-                    var extension = Path.GetExtension(file).ToLower();
+                    var extension = Path.GetExtension(sourceFile).ToLower();
                     var isPriorityFile = prioExtensions.Contains(extension);
 
                     if (!isPriorityFile)
@@ -50,12 +62,12 @@ namespace EasySave.Strategies
                         );
                     }
 
-                    var relativePath = Path.GetRelativePath(sourcePath, file);
-                    var targetFile = Path.Combine(targetPath, relativePath);
+                    var relative = Path.GetRelativePath(sourcePath, sourceFile);
+                    var targetFile = Path.Combine(targetPath, relative);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
 
-                    var fileSize = new FileInfo(file).Length;
+                    var fileSize = new FileInfo(sourceFile).Length;
                     context.FileCoordinator.RequestPermission(fileSize, largeFileLimit);
 
                     var startTime = DateTime.Now;
@@ -66,12 +78,12 @@ namespace EasySave.Strategies
                         if (encryptedExtensions.Contains(extension))
                         {
                             var encStart = DateTime.Now;
-                            cryptoManager.EncryptFile(file, targetFile);
+                            cryptoManager.EncryptFile(sourceFile, targetFile);
                             encryptionTime = (long)(DateTime.Now - encStart).TotalMilliseconds;
                         }
                         else
                         {
-                            File.Copy(file, targetFile, true);
+                            File.Copy(sourceFile, targetFile, true);
                         }
                     }
                     finally
@@ -81,7 +93,7 @@ namespace EasySave.Strategies
 
                     var transferTime = (long)(DateTime.Now - startTime).TotalMilliseconds;
 
-                    context.Observer.OnFileProcessed(file, targetFile, fileSize, transferTime, encryptionTime);
+                    context.Observer.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTime);
 
                     if (isPriorityFile)
                     {
