@@ -36,6 +36,8 @@ namespace EasySave.Services
     
         public async Task RunAllAsync()
         {
+            _tracker.Reset(); // Nettoie l'état laissé par un run précédent stoppé/annulé
+
             var runningTasks = _tasks
                 .Where(task => task.State == BackupTaskState.Idle)
                 .Select(task => task.RunAsync())

@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogCentralizationService", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Tests", "EasySave.Tests\EasySave.Tests.csproj", "{EF754110-7C3C-4D62-84BF-151AC0828D9A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoSoft", "CryptoSoft\CryptoSoft.csproj", "{4302A7BA-9215-422B-949C-1539E6986640}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{6B859DD8-73CC-4E65-8D34-8AFC909AB239}.Release|x64.Build.0 = Release|Any CPU
 		{6B859DD8-73CC-4E65-8D34-8AFC909AB239}.Release|x86.ActiveCfg = Release|Any CPU
 		{6B859DD8-73CC-4E65-8D34-8AFC909AB239}.Release|x86.Build.0 = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|x64.Build.0 = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Debug|x86.Build.0 = Debug|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|x64.ActiveCfg = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|x64.Build.0 = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|x86.ActiveCfg = Release|Any CPU
+		{4302A7BA-9215-422B-949C-1539E6986640}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

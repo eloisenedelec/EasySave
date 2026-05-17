@@ -1,50 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using System.Threading;
 
 namespace EasySave.Services
 {
     public class CryptoSoftManager
     {
-        // Le préfixe "Global\" rend le Mutex visible pour toutes les sessions utilisateurs
-        private static readonly Mutex _cryptoMutex = new Mutex(false, @"Global\EasySave_CryptoSoft_Mutex");
+        // Mutex interne : sérialise les appels venant des jobs parallèles d'EasySave.
+        // CryptoSoft.exe est mono-instance côté machine entière via son propre Named Mutex.
+        private static readonly Mutex _internalMutex = new Mutex(false, @"Global\EasySave_CryptoSoft_Mutex");
+
+        private const int ExitCodeBusy    = 2;
+        private const int MaxRetries      = 10;
+        private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(500);
 
         public void EncryptFile(string sourceFile, string destinationFile)
         {
-            // 1. On demande l'accès (on attend max 5 min si déjà utilisé)
-            bool isAcquired = _cryptoMutex.WaitOne(TimeSpan.FromMinutes(5));
+            bool acquired = _internalMutex.WaitOne(TimeSpan.FromMinutes(5));
+            if (!acquired)
+                throw new TimeoutException("CryptoSoft : délai d'attente dépassé (5 min).");
 
             try
             {
-                if (!isAcquired)
+                string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CryptoSoft.exe");
+
+                if (!File.Exists(exePath))
+                    throw new FileNotFoundException($"CryptoSoft.exe introuvable : {exePath}");
+
+                for (int attempt = 1; attempt <= MaxRetries; attempt++)
                 {
-                    throw new TimeoutException("CryptoSoft est déjà utilisé par une autre instance.");
+                    var (exitCode, stderr) = RunCryptoSoft(exePath, sourceFile, destinationFile);
+
+                    if (exitCode == 0)
+                        return;
+
+                    if (exitCode == ExitCodeBusy)
+                    {
+                        Thread.Sleep(RetryDelay);
+                        continue;
+                    }
+
+                    string detail = string.IsNullOrWhiteSpace(stderr) ? "" : $" — {stderr.Trim()}";
+                    throw new InvalidOperationException(
+                        $"CryptoSoft a échoué (code {exitCode}){detail} sur : {sourceFile}");
                 }
 
-                // 2. Lancement du processus externe
-                using (Process process = new Process())
-                {
-                    process.StartInfo.FileName = "CryptoSoft.exe";
-                    // On passe les arguments (source et destination) entre guillemets pour gérer les espaces
-                    process.StartInfo.Arguments = $"\"{sourceFile}\" \"{destinationFile}\"";
-                    process.StartInfo.CreateNoWindow = true; // Cache la console noire
-                    process.StartInfo.UseShellExecute = false;
-
-                    process.Start();
-                    process.WaitForExit(); // On attend la fin du chiffrement avant de libérer le verrou
-                }
+                throw new TimeoutException(
+                    $"CryptoSoft occupé après {MaxRetries} tentatives : {sourceFile}");
             }
             finally
             {
-                // 3. Quoi qu'il arrive, on libère le Mutex pour les autres jobs
-                if (isAcquired)
-                {
-                    _cryptoMutex.ReleaseMutex();
-                }
+                _internalMutex.ReleaseMutex();
             }
+        }
+
+        private static (int exitCode, string stderr) RunCryptoSoft(string exePath, string source, string destination)
+        {
+            using var process = new Process();
+            process.StartInfo.FileName               = exePath;
+            process.StartInfo.Arguments              = $"\"{source}\" \"{destination}\"";
+            process.StartInfo.CreateNoWindow         = true;
+            process.StartInfo.UseShellExecute        = false;
+            process.StartInfo.RedirectStandardError  = true;
+
+            process.Start();
+            string stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            return (process.ExitCode, stderr);
         }
     }
 }

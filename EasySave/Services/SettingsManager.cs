@@ -72,7 +72,16 @@ namespace EasySave.Services
             ? 1
             : _settings.BusinessProcesses.Max(p => p.Id) + 1;
 
-        // 2. GESTION DU FORMAT DE LOG (JSON / XML)
+        // 2. GESTION DE LA LANGUE
+        public string GetLanguage() => _settings.Language ?? "fr";
+
+        public void SetLanguage(string code)
+        {
+            _settings.Language = code;
+            _repository.Save(_settings);
+        }
+
+        // 3. GESTION DU FORMAT DE LOG (JSON / XML)
         public string GetLogFormat() => _settings.LogFormat;
 
         public void SetLogFormat(string format)
@@ -93,7 +102,7 @@ namespace EasySave.Services
             _repository.Save(_settings);
         }
 
-        public string GetLogServerUrl() => _settings.LogServerUrl ?? "http://localhost:5000";
+        public string GetLogServerUrl() => _settings.LogServerUrl ?? "http://localhost:5050";
 
         public void SetLogServerUrl(string url)
         {

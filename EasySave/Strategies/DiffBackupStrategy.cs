@@ -20,23 +20,23 @@ namespace EasySave.Strategies
             return new FileInfo(sourceFile).LastWriteTime > new FileInfo(backupFile).LastWriteTime;
         }
 
-        // On remet BackupExecutionContext ici aussi !
         public void Execute(BackupJob job, BackupExecutionContext context)
         {
             string sourcePath = job.SourcePath;
             string targetPath = job.TargetPath;
 
-            var modifiedFiles = Directory
-                .GetFiles(sourcePath, "*", SearchOption.AllDirectories)
-                .Where(f => IsFileModified(f, sourcePath, targetPath))
-                .ToList();
-
-            long totalSize = modifiedFiles.Sum(f => new FileInfo(f).Length);
-
             var settings = SettingsManager.GetInstance();
             var encryptedExtensions = settings.GetEncryptedExtensions();
             var prioExtensions = settings.GetPriorityExtensions();
 
+            // Prioritaires en premier pour éviter le deadlock interne au job
+            var modifiedFiles = Directory
+                .GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+                .Where(f => IsFileModified(f, sourcePath, targetPath))
+                .OrderByDescending(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()))
+                .ToList();
+
+            long totalSize = modifiedFiles.Sum(f => new FileInfo(f).Length);
             int prioCount = modifiedFiles.Count(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()));
             context.PriorityTracker.RegisterJobPriorityFiles(job.Id, prioCount);
 

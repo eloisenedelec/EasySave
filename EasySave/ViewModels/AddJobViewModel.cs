@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -42,6 +43,8 @@ public class AddJobViewModel : INotifyPropertyChanged
         set { _selectedType = value; OnPropertyChanged(); }
     }
 
+    public IEnumerable<BackupType> BackupTypes => Enum.GetValues<BackupType>();
+
     public string? ErrorMessage
     {
         get => _errorMessage;
@@ -49,7 +52,6 @@ public class AddJobViewModel : INotifyPropertyChanged
     }
 
     public bool HasError => !string.IsNullOrEmpty(_errorMessage);
-    public IEnumerable<BackupType> BackupTypes => Enum.GetValues<BackupType>();
 
     public ICommand SaveCommand { get; }
     public ICommand CancelCommand { get; }

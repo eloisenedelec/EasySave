@@ -1,6 +1,8 @@
 using System.Windows;
 using EasySave.Services;
+using EasySave.UI;
 using EasyLog;
+using EasyLog.Contracts;
 
 namespace EasySave;
 
@@ -13,9 +15,13 @@ public partial class App : Application
         base.OnStartup(e);
         Executor = new BackupExecutor();
 
+        var settings = SettingsManager.GetInstance();
+        LanguageManager.GetInstance().LoadLanguage(settings.GetLanguage());
+
         var logger = Logger.GetInstance();
-        logger.Initialize(SettingsManager.GetInstance());
-        logger.SetFormat(SettingsManager.GetInstance().GetLogFormat());
+        logger.Initialize(settings);
+        logger.SetFormat(settings.GetLogFormat());
+
         Executor.AddObserver(logger);
         Executor.AddObserver(StateManager.GetInstance());
     }

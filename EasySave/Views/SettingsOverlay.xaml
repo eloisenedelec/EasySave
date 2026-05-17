@@ -4,6 +4,7 @@
              xmlns:ui="clr-namespace:EasySave.UI">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <Style x:Key="PrimaryBtn" TargetType="Button">
             <Setter Property="Background" Value="#415A77"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -147,6 +148,22 @@
                       Padding="8,6"
                       FontSize="13"
                       Margin="0,0,0,20"/>
+
+            <!-- mode des logs -->
+            <TextBlock Text="{Binding [settings_logmode], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource SectionLabel}"/>
+            <ComboBox ItemsSource="{Binding LogModes}"
+                      SelectedItem="{Binding SelectedLogMode}"
+                      DisplayMemberPath="Label"
+                      Padding="8,6"
+                      FontSize="13"
+                      Margin="0,0,0,12"/>
+
+            <!-- url serveur de logs -->
+            <StackPanel Visibility="{Binding ShowServerUrl, Converter={StaticResource BoolToVis}}" Margin="0,0,0,20">
+                <TextBlock Text="{Binding [settings_logserver], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource SectionLabel}"/>
+                <TextBox Text="{Binding LogServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputBox}"/>
+            </StackPanel>
 
             <!-- logiciels métiers à surv -->
             <TextBlock Text="{Binding [settings_processes], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource SectionLabel}"/>

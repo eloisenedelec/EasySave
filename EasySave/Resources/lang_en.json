@@ -57,6 +57,8 @@
   "btn_open_logs": "📂 Open logs",
   "settings_priority_ext": "PRIORITY EXTENSIONS",
   "settings_large_file_limit": "LARGE FILE SIZE LIMIT",
+  "settings_logmode": "LOG MODE",
+  "settings_logserver": "LOG SERVER URL",
 
   "btn_pause_all": "⏸ Pause",
   "btn_resume_all": "▶ Resume",

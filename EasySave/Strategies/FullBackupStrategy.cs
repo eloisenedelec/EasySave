@@ -15,13 +15,16 @@ namespace EasySave.Strategies
             string sourcePath = job.SourcePath;
             string targetPath = job.TargetPath;
 
-            var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
-            long totalSize = files.Sum(f => new FileInfo(f).Length);
-
             var settings = SettingsManager.GetInstance();
             var encryptedExtensions = settings.GetEncryptedExtensions();
             var prioExtensions = settings.GetPriorityExtensions();
 
+            // Prioritaires en premier pour éviter le deadlock interne au job
+            var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+                .OrderByDescending(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()))
+                .ToArray();
+
+            long totalSize = files.Sum(f => new FileInfo(f).Length);
             int prioCount = files.Count(f => prioExtensions.Contains(Path.GetExtension(f).ToLower()));
             context.PriorityTracker.RegisterJobPriorityFiles(job.Id, prioCount);
 
