@@ -16,7 +16,9 @@ namespace EasySave.Services
         private readonly BackupOrchestrator _orchestrator;
         private readonly CryptoSoftManager _cryptoManager = new();
 
-        // Correction : Accepte l'orchestrateur en paramètre pour résoudre CS7036
+        // Correction : Accepte l'orchestrateur en paramï¿½tre pour rï¿½soudre CS7036
+        public BackupOrchestrator Orchestrator => _orchestrator;
+
         public BackupExecutor(BackupOrchestrator? orchestrator = null)
         {
             _observers = new List<IBackupObserver>();

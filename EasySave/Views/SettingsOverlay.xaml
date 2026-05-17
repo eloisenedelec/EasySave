@@ -102,6 +102,7 @@
             <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.18" Color="#000000"/>
         </Border.Effect>
 
+        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
         <StackPanel>
 
             <TextBlock Text="{Binding [settings_title], Source={x:Static ui:LanguageManager.Instance}}"
@@ -217,6 +218,53 @@
                         Command="{Binding AddExtensionCommand}"/>
             </Grid>
 
+            <!-- extensions prioritaires -->
+            <TextBlock Text="{Binding [settings_priority_ext], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource SectionLabel}"/>
+            <ItemsControl ItemsSource="{Binding PriorityExtensions}" Margin="0,0,0,8">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#FFF8E1" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding}" FontSize="13" Foreground="#1B263B" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="✕"
+                                        Style="{StaticResource RemoveBtn}"
+                                        Command="{Binding DataContext.RemovePriorityExtensionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding NewPriorityExtension, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputBox}"
+                         Margin="0,0,8,0"/>
+                <Button Grid.Column="1" Content="{Binding [btn_add], Source={x:Static ui:LanguageManager.Instance}}"
+                        Style="{StaticResource PrimaryBtn}"
+                        Command="{Binding AddPriorityExtensionCommand}"/>
+            </Grid>
+
+            <!-- taille limite gros fichiers -->
+            <TextBlock Text="{Binding [settings_large_file_limit], Source={x:Static ui:LanguageManager.Instance}}" Style="{StaticResource SectionLabel}"/>
+            <Grid Margin="0,0,0,28">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding LargeFileSizeKb, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputBox}"
+                         Margin="0,0,8,0"/>
+                <TextBlock Grid.Column="1" Text="Ko" FontSize="13" Foreground="#778DA9" VerticalAlignment="Center"/>
+            </Grid>
+
             <!-- ouvrir les logs, cancel ou save -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="{Binding [btn_open_logs], Source={x:Static ui:LanguageManager.Instance}}"
@@ -233,5 +281,6 @@
             </StackPanel>
 
         </StackPanel>
+        </ScrollViewer>
     </Border>
 </UserControl>

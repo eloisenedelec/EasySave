@@ -10,17 +10,19 @@ namespace EasySave.Services
         public async Task RequestPermissionAsync(long fileSize, long limit)
         {
             if (fileSize > limit)
-            {
                 await _semaphore.WaitAsync();
-            }
+        }
+
+        public void RequestPermission(long fileSize, long limit)
+        {
+            if (fileSize > limit)
+                _semaphore.Wait();
         }
 
         public void ReleasePermission(long fileSize, long limit)
         {
             if (fileSize > limit)
-            {
                 _semaphore.Release();
-            }
         }
     }
 }

@@ -8,9 +8,17 @@ namespace EasySave.Services
     public class BackupTask
     {
         public BackupJob Job { get; }
-        public BackupTaskState State { get; private set; }
         public CancellationTokenSource CancellationTokenSource { get; }
         public ManualResetEventSlim PauseEvent { get; }
+
+        public event Action<BackupTaskState>? StateChanged;
+
+        private BackupTaskState _state;
+        public BackupTaskState State
+        {
+            get => _state;
+            private set { _state = value; StateChanged?.Invoke(value); }
+        }
 
         private readonly IBackupObserver _observer;
         private string? _errorMessage;
@@ -84,8 +92,7 @@ namespace EasySave.Services
                 _tracker,
                 _coordinator
             );
-            strategy.Execute(Job, executionContext);
-            await Task.CompletedTask;
+            await Task.Run(() => strategy.Execute(Job, executionContext), CancellationTokenSource.Token);
         }
 
         public void Pause()

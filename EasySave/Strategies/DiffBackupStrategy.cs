@@ -43,6 +43,7 @@ namespace EasySave.Strategies
             context.Observer.OnBackupStarted(job.Name, modifiedFiles.Count, totalSize);
 
             var cryptoManager = new CryptoSoftManager();
+            long largeFileLimit = settings.GetLargeFileSizeLimit();
 
             try
             {
@@ -67,22 +68,30 @@ namespace EasySave.Strategies
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
 
                     var fileSize = new FileInfo(sourceFile).Length;
+                    context.FileCoordinator.RequestPermission(fileSize, largeFileLimit);
+
                     var startTime = DateTime.Now;
                     long encryptionTime = 0;
 
-                    if (encryptedExtensions.Contains(extension))
+                    try
                     {
-                        // On chronomètre manuellement
-                        var encStart = DateTime.Now;
-                        cryptoManager.EncryptFile(sourceFile, targetFile);
-                        encryptionTime = (long)(DateTime.Now - encStart).TotalMilliseconds;
+                        if (encryptedExtensions.Contains(extension))
+                        {
+                            var encStart = DateTime.Now;
+                            cryptoManager.EncryptFile(sourceFile, targetFile);
+                            encryptionTime = (long)(DateTime.Now - encStart).TotalMilliseconds;
+                        }
+                        else
+                        {
+                            File.Copy(sourceFile, targetFile, true);
+                        }
                     }
-                    else
+                    finally
                     {
-                        File.Copy(sourceFile, targetFile, true);
+                        context.FileCoordinator.ReleasePermission(fileSize, largeFileLimit);
                     }
 
-                    var transferTime = (DateTime.Now - startTime).Ticks;
+                    var transferTime = (long)(DateTime.Now - startTime).TotalMilliseconds;
 
                     context.Observer.OnFileProcessed(sourceFile, targetFile, fileSize, transferTime, encryptionTime);
 
