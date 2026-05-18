@@ -1,38 +1,63 @@
-# Manuel de Support Technique - EasySave v2.0
+# Manuel de Support Technique - EasySave v3.0
 
-Ce document regroupe les informations techniques nécessaires au support client (Niveau 1 et 2) pour le dépannage et la configuration avancée du logiciel EasySave.
+Ce document regroupe les informations techniques nécessaires au support client (Niveau 1 et 2) pour le dépannage, le diagnostic de performance et la configuration avancée du logiciel EasySave v3.0.
 
-## 1. Emplacement des fichiers systèmes
+---
 
-L'application EasySave ne requiert pas de base de données. L'intégralité de la configuration et du suivi est stockée localement dans le répertoire utilisateur (AppData). 
+## 1. Emplacement des fichiers systèmes et paramètres généraux
 
-**Chemin absolu :** `C:\Users\[NomUtilisateur]\AppData\Roaming\EasySave\`
+L'application EasySave stocke l'intégralité de sa configuration et de son suivi localement dans le répertoire utilisateur (AppData).
+* **Chemin absolu :** `C:\Users\[NomUtilisateur]\AppData\Roaming\EasySave\`
 
-Ce répertoire contient les éléments suivants :
-*   `backups.json` : Contient la configuration des travaux de sauvegarde créés par l'utilisateur.
-*   `state.json` : Fichier d'état en temps réel (toujours au format JSON), mis à jour dynamiquement pendant l'exécution d'une sauvegarde.
-*   `settings.json` : Fichier de configuration globale (Logiciels métiers, format des logs, extensions à chiffrer).
-*   **Dossier `/logs/`** : Contient les journaux journaliers (nommés `YYYY-MM-DD.json` ou `YYYY-MM-DD.xml`).
+### Fichiers clés à inspecter :
+* **`backups.json` :** Contient la configuration des travaux de sauvegarde créés par l'utilisateur.
+* **`state.json` :** Fichier d'état en temps réel au format JSON. En v3.0, il suit dynamiquement l'avancement en pourcentage de chaque thread parallèle actif (`Running`, `Paused`, `Stopped`).
+* **`settings.json` :** Fichier de configuration globale. En v3.0, de nouvelles clés critiques ont été ajoutées pour le moteur de règles :
+  * `priorityExtensions` : Liste des extensions prioritaires au format JSON (ex: `[".docx",".xlsx"]`).
+  * `largeFileThresholdKb` : Seuil en Ko définissant un fichier volumineux (ex: `"1000"`).
+  * `businessAppName` : Nom exact du processus logiciel métier surveillé (ex: `"Calculator"`).
+  * `logMode` : Mode d'export des logs (`"Local"`, `"Centralized"`, ou `"Both"`).
+  * `logServerUrl` : URL pointant vers le conteneur Docker de centralisation (ex: `"http://192.168.1.100:5000"`).
 
-## 2. Fichiers Logs (v1.1 et v2.0)
+---
 
-Suite à la mise à jour 1.1, l'utilisateur peut choisir d'exporter ses logs journaliers en **JSON** ou en **XML**. Ce paramètre est modifiable depuis l'interface graphique (v2.0).
+## 2. Centralisation et formats des Logs (Service Docker)
 
-**Nouveau paramètre de cryptage :**
-Dans la version 2.0, les logs incluent le temps de cryptage d'un fichier (via CryptoSoft). Voici comment interpréter cette valeur lors d'un diagnostic :
-*   `0` : Aucun cryptage n'a été appliqué sur ce fichier.
-*   `> 0` : Le cryptage a réussi. La valeur indique le temps pris en millisecondes (ms).
-*   `< 0` : Une erreur s'est produite lors du cryptage (ex: -1).
+EasySave v3.0 permet désormais de déporter et d'agréger les logs journaliers sur un serveur centralisé.
 
-## 3. Diagnostic des Logiciels Métiers (Process Monitoring)
+### En cas de logs manquants ou d'erreurs de transfert :
+* **Vérification du Mode :** Assurez-vous que le paramètre `logMode` dans `settings.json` est bien positionné sur `Centralized` ou `Both`.
+* **Diagnostic Réseau :** Tester l'accessibilité de l'API REST hébergée sous Docker via l'adresse configurée dans `logServerUrl`. Le service utilise le composant `HttpClient` d'EasyLog pour pousser les données.
+* **Statut du Conteneur :** Vérifier que l'application ASP.NET Core `LogCentralizationService` tourne correctement sur le serveur Docker. Les requêtes cibles sont :
+  * `POST /api/log` : Pour l'envoi en temps réel des entrées de sauvegarde par les clients.
+  * `GET /api/log?date=YYYY-MM-DD` : Pour la récupération centralisée des logs d'une date spécifique.
 
-Si un client signale qu'une sauvegarde refuse de se lancer ou reste bloquée, vérifiez la configuration des "Logiciels Métiers".
-*   L'application bloque la sauvegarde si un processus listé dans les paramètres est en cours d'exécution.
-*   Pour vérifier le bon fonctionnement de cette sécurité avec le client, vous pouvez ajouter le processus `calculator` (la calculatrice Windows) dans la liste des logiciels métiers.
-*   Si un arrêt d'urgence est déclenché par l'ouverture d'un logiciel métier, cet événement est explicitement consigné dans le log journalier.
+---
 
-## 4. Dépannage du Chiffrement (CryptoSoft)
+## 3. Diagnostic du Parallélisme et Verrous de Flux
 
-L'intégration de CryptoSoft (v2.0) s'applique uniquement aux fichiers dont l'extension a été explicitement définie par l'utilisateur.
-*   Si des fichiers ne sont pas chiffrés : Vérifiez que l'extension est bien présente dans les paramètres (avec le point, ex: `.pdf`, `.docx`).
-*   CryptoSoft est un exécutable externe. Assurez-vous que l'antivirus du client ne bloque pas l'appel système (Process.Start) vers ce composant.
+Le passage au multi-threading avec `Task.Run()` peut provoquer des comportements d'attente normaux mais confondus par les clients avec des blocages applicatifs.
+
+### Problème : Un travail de sauvegarde semble figé à 0% ou n'avance pas
+* **Vérification des Priorités globales :** EasySave intègre un `GlobalPriorityTracker`. Si un autre travail possède des fichiers prioritaires (ex: `.docx`) en attente de copie, **tous les fichiers normaux de tous les autres travaux sont mis en attente** via la méthode `WaitForPriorityIfNeeded()`. C'est un comportement normal. Attendre que les fichiers prioritaires se terminent.
+* **Régulation de Bande Passante (Gros fichiers) :** Si deux travaux parallèles contiennent des fichiers dépassant le seuil `largeFileThresholdKb`, le `LargeFileCoordinator` bloque l'un des deux threads. Il utilise un `SemaphoreSlim(1, 1)` pour n'autoriser qu'un seul transfert lourd à la fois. Les fichiers légers, eux, doivent continuer à défiler normalement en tâche de fond.
+
+---
+
+## 4. Diagnostic des Logiciels Métiers (Auto-Pause & Reprise)
+
+La détection d'un logiciel métier a évolué en v3.0 : elle ne bloque plus seulement le lancement, elle suspend les travaux en cours.
+
+* **Mécanisme :** Le `ProcessMonitorService` scanne les processus actifs toutes les 1500 ms.
+* **Comportement en cas de détection :** Dès que le processus métier (ex: `Calculator.exe`) est détecté, l'orchestrateur appelle `PauseAll()`. Le fichier en cours de copie se termine pour éviter toute corruption, puis la tâche se met en attente via `PauseEvent.Reset()`.
+* **Résolution :** Demander à l'utilisateur de fermer complètement l'application métier. Le système détectera la fermeture et déclenchera automatiquement un `ResumeAll()` en activant `PauseEvent.Set()`, relançant immédiatement la copie.
+
+---
+
+## 5. Dépannage du Chiffrement Évolué (CryptoSoft Mono-Instance)
+
+Le logiciel externe CryptoSoft.exe a été modifié pour devenir strictement **mono-instance système**.
+
+* **Solution technique :** Un `Mutex` global nommé `Global\CryptoSoftMutex` est utilisé pour empêcher deux instances de chiffrer en même temps sur la même machine.
+* **Symptôme de panne :** Si deux fichiers volumineux de deux travaux différents demandent un chiffrement simultané, le second thread attendra au niveau du Mutex (Timeout configuré à 5 minutes).
+* **Action de support :** Si CryptoSoft reste bloqué indéfiniment, vérifiez via le Gestionnaire des tâches Windows qu'une instance fantôme de `CryptoSoft.exe` n'est pas restée active en tâche de fond suite à un crash précédent, bloquant ainsi le verrou du Mutex global. Si c'est le cas, tuez le processus `CryptoSoft.exe`.
