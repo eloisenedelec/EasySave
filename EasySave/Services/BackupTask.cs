@@ -43,13 +43,13 @@ namespace EasySave.Services
                 State = BackupTaskState.Running;
 
                 ProcessMonitoring pm = new ProcessMonitoring(SettingsManager.GetInstance());
-                if (!pm.AreNoBusinessProcessesRunning())
+                while (!pm.AreNoBusinessProcessesRunning())
                 {
-                    _observer.OnBackupError(Job.Name, "Annulation : Logiciel métier en cours d'exécution.");
-                    State = BackupTaskState.Error;
-                    _errorMessage = "Logiciel métier actif";
-                    return;
+                    State = BackupTaskState.Paused;
+                    CancellationTokenSource.Token.ThrowIfCancellationRequested();
+                    await Task.Delay(1500, CancellationTokenSource.Token);
                 }
+                State = BackupTaskState.Running;
 
                 IBackupStrategy strategy = BackupStrategyFactory.CreateStrategy(Job.Type);
                 
