@@ -7,6 +7,20 @@ __Produit :__ EasySave
 
 ---
 
+## EasySave Version 3.0 (Mise à jour majeure)
+
+Cette nouvelle version majeure introduit une refonte complète du moteur d'exécution en y intégrant le parallélisme, un contrôle en temps réel et une orchestration intelligente des ressources.
+
+* __Sauvegardes en parallèle (Multi-threading) :__ Abandon du mode séquentiel au profit d'une exécution simultanée des travaux via `Task.Run()`, optimisant l'utilisation des processeurs multi-cœurs.
+* __Contrôle en temps réel (Play / Pause / Stop) :__ Intégration de commandes interactives permettant de suspendre, reprendre ou arrêter définitivement n'importe quelle tâche de sauvegarde à chaud, avec un suivi de progression en pourcentage.
+* __Gestion globale des priorités :__ Déploiement du `GlobalPriorityTracker` qui bloque automatiquement la copie des fichiers normaux tant qu'il reste des extensions critiques en attente dans n'importe quel autre travail.
+* __Régulation des fichiers volumineux :__ Protection de la bande passante grâce à un sémaphore limitant à un seul slot le transfert simultané des fichiers supérieurs à un seuil paramétrable (_n_ Ko), sans bloquer les fichiers légers.
+* __Auto-Pause Métier intelligente :__ Amélioration du module de surveillance qui met désormais en pause les transferts dès la détection d'un logiciel métier (après finalisation du fichier en cours) et redémarre automatiquement les jobs dès sa fermeture.
+* __CryptoSoft Mono-instance :__ Sécurisation de l'outil de chiffrement externe via un Mutex système global pour interdire toute exécution simultanée conflictuelle.
+* __Centralisation des logs (Docker) :__ Création d'un service d'agrégation de logs en temps réel sous Docker (ASP.NET Core), offrant à l'utilisateur le choix entre un stockage local, centralisé, ou hybride.
+
+---
+
 ## EasySave Version 2.0 (Mise à jour majeure)
 
 Cette nouvelle version majeure transforme l'expérience utilisateur et renforce la sécurité et la flexibilité de vos sauvegardes.
