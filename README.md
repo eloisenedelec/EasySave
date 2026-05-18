@@ -1,4 +1,4 @@
-#  README - EasySave v1.0
+#  README - EasySave v3.0
 
 ## Description du Projet
 EasySave est un logiciel de sauvegarde en console développé en C# (.NET 8.0). 
